@@ -178,11 +178,28 @@ npm run sanity:typegen   # writes sanity/sanity.types.ts
 
 `npm run build` runs `sanity:types` automatically via the `prebuild` script, so CI stays in sync without a manual step. Both commands are offline — they don't need a connected Sanity project or network access, they just read local schemas + GROQ.
 
+### Seeding the minimum content
+
+The schema has strong validation (required SEO, required CTAs, min-length constraints on a few arrays). To publish a homepage end-to-end, documents must be created in this order:
+
+1. **Global settings** (singleton) — `brandName`, `tagline` (EN + RU), `primaryEmail`, `defaultSeo` (title + description, both locales).
+2. **Author** — one record for the founder. `name` (single string), `role` (EN + RU), `bio` (EN + RU), `photo`.
+3. **At least one Service** — required by every Case Study's `services` ref.
+   - `title` (EN + RU), `slugEn`, `slugRu`, `tagline`, `positioning`, `whoItsFor` (≥ 1 item), `whatsIncluded` (≥ 1 item), `processSteps` (≥ 1 item), `finalCta`, `seo`.
+4. **One Case Study** — needed for the homepage's `selectedWork` (min 2) and for `/work` to render.
+   - `title`, `client`, `slugEn`, `slugRu`, `publishedAt`, `services` (≥ 1 ref), `heroImage`, `summary`, `atAGlance` (≥ 1), `bodyEn`, `bodyRu`, `finalCta`, `seo`. Add a second case study if you want the homepage's `selectedWork` to satisfy its min-2 constraint on publish.
+5. **Home page** (singleton) — required for HomeHero to render.
+   - **For HomeHero specifically**, fill `heroHeading` (EN + RU), `heroLead` (EN + RU), and optionally `heroCta` (label + href like `/contact` + variant).
+   - The rest of the homePage document (`positioningStatement`, `selectedWork`, `finalCta`, `seo`) is required by the schema on publish, even though only hero fields are rendered right now. Fill them minimally to get a published document.
+6. **About / Contact / Work index / Blog index / Thank you page** (singletons) — each requires at least the hero text + `seo`. None of these render real sections yet, so you can leave them as drafts until their sections are built.
+
+Tip: on first load of `/studio`, each pinned singleton sidebar entry is an empty shell — clicking it opens the blank document editor. Publish is gated by validation, but saving as draft works without it.
+
 ## What is still placeholder
 
 - **Studio not yet connected to a project** — the wiring is done; a real Sanity projectId + dataset still has to be created and set in `.env.local`.
 - **Seed content** — no singleton instances exist yet. On first Studio load each pinned sidebar entry will be an empty document waiting to be created.
-- **Real page sections** — non-home pages currently render `<SectionPlaceholder />` stacks. Home sections exist as thin component files wrapping the placeholder.
+- **Real page sections** — non-home pages currently render `<SectionPlaceholder />` stacks. On the home page, `HomeHero` is the first real section (fetches from `homePage` via `sanityFetch`); the other seven home sections are still placeholders.
 - **Brand fonts** — `styles/fonts.css` is empty; wire `Inter` / `Fraunces` / `JetBrains Mono` (or final brand choice) via `next/font` when finalized.
 - **Sentry wrapping** — `@sentry/nextjs` installed but `next.config.mjs` not yet wrapped; no `sentry.client.config.ts` / `sentry.server.config.ts`.
 - **Plausible** — script tag conditionally rendered; no custom events wired.
@@ -192,8 +209,8 @@ npm run sanity:typegen   # writes sanity/sanity.types.ts
 ## What to build next
 
 1. **Connect a real Sanity project** — create project at sanity.io/manage, whitelist localhost in CORS, populate `.env.local`, verify `/studio` loads.
-2. **Seed content** — author one record per singleton, plus 1–2 services, a case study, and a blog post, to drive real rendering.
-3. **Home sections** — replace the eight `SectionPlaceholder` stubs in `components/sections/home/` with real implementations that read from `homePage` via `sanityFetch(homePageQuery)`.
+2. **Seed content** — follow the order in "Seeding the minimum content" above.
+3. **Home sections (continued)** — `HomeHero` is real. Next: `HomePositioning` (reads `homePage.positioningStatement`), then `HomeSelectedWork` (reads `homePage.selectedWork` with `->` dereffing to case studies). Each follows the same pattern as `HomeHero`.
 4. **Other page sections** — as each page is designed, lift its placeholders into real section components under `components/sections/<page>/`, fetching the matching document.
 5. **Brand fonts** — wire through `styles/fonts.css` or `next/font`; update tokens in `styles/tokens.css`.
 6. **Sentry** — add `sentry.{client,server,edge}.config.ts`, wrap `next.config.mjs` with `withSentryConfig`, capture from `app/error.tsx`.

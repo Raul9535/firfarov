@@ -33,3 +33,18 @@ export function stripLocalePrefix(pathname: string): string {
 export function alternateLocale(locale: Locale): Locale {
   return locale === "en" ? "ru" : "en";
 }
+
+/**
+ * Turn a CTA `href` into a ready-to-use link URL.
+ * Internal paths (starting with `/`) go through `localizePath` so the `/ru` prefix
+ * is applied when needed; absolute URLs, `mailto:`, and `tel:` pass through untouched.
+ * Returns `"#"` when the href is missing, so Button components always get a valid string.
+ */
+export function resolveCtaHref(
+  href: string | null | undefined,
+  locale: Locale,
+): string {
+  if (!href) return "#";
+  if (href.startsWith("/")) return localizePath(href, locale);
+  return href;
+}
