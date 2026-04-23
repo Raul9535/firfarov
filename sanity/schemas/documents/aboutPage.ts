@@ -4,6 +4,9 @@ import { portableTextConfig } from "../portableText";
 /**
  * Singleton. About page content.
  * Most of the body is free-form Portable Text; principles and expertise are light structured lists.
+ *
+ * **MVP publish floor**: only `heroStatement`. Every other field is optional — editors can
+ * publish a minimal About page with just a headline and fill in body, principles, and CTA later.
  */
 export const aboutPage = defineType({
   name: "aboutPage",
@@ -38,7 +41,6 @@ export const aboutPage = defineType({
       type: "array",
       group: "body",
       of: portableTextConfig,
-      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: "whatItIsRu",
@@ -46,7 +48,6 @@ export const aboutPage = defineType({
       type: "array",
       group: "body",
       of: portableTextConfig,
-      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: "howWeWorkEn",
@@ -107,14 +108,13 @@ export const aboutPage = defineType({
       title: "Final CTA",
       type: "ctaBlock",
       group: "cta",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "seo",
       title: "SEO",
       type: "seoMetadata",
       group: "seo",
-      validation: (rule) => rule.required(),
+      description: "Overrides the defaults from globalSettings when present.",
     }),
   ],
   preview: {

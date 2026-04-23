@@ -3,6 +3,8 @@ import { defineField, defineType } from "sanity";
 /**
  * Singleton. Content for /contact.
  * The brief form itself is rendered by the frontend; this document holds the copy around it.
+ *
+ * **MVP publish floor**: only `heroHeading`. `seo` falls back to globalSettings when empty.
  */
 export const contactPage = defineType({
   name: "contactPage",
@@ -107,7 +109,7 @@ export const contactPage = defineType({
       title: "SEO",
       type: "seoMetadata",
       group: "seo",
-      validation: (rule) => rule.required(),
+      description: "Overrides the defaults from globalSettings when present.",
     }),
   ],
   preview: {

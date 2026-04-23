@@ -2,6 +2,8 @@ import { defineField, defineType } from "sanity";
 
 /**
  * Singleton. Header/intro copy for /blog. Post listings are populated from blogPost documents.
+ *
+ * **MVP publish floor**: only `heroHeading`.
  */
 export const blogIndexPage = defineType({
   name: "blogIndexPage",
@@ -30,7 +32,7 @@ export const blogIndexPage = defineType({
       name: "seo",
       title: "SEO",
       type: "seoMetadata",
-      validation: (rule) => rule.required(),
+      description: "Overrides the defaults from globalSettings when present.",
     }),
   ],
   preview: {

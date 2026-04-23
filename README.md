@@ -180,20 +180,35 @@ npm run sanity:typegen   # writes sanity/sanity.types.ts
 
 ### Seeding the minimum content
 
-The schema has strong validation (required SEO, required CTAs, min-length constraints on a few arrays). To publish a homepage end-to-end, documents must be created in this order:
+Schema validation is deliberately relaxed for MVP — each document type has a small "publish floor" of truly-required fields, and everything else is optional. Editors can stand up stub documents in any order and fill content progressively without tripping publish gates. The frontend skips empty fields rather than rendering placeholders.
 
-1. **Global settings** (singleton) — `brandName`, `tagline` (EN + RU), `primaryEmail`, `defaultSeo` (title + description, both locales).
-2. **Author** — one record for the founder. `name` (single string), `role` (EN + RU), `bio` (EN + RU), `photo`.
-3. **At least one Service** — required by every Case Study's `services` ref.
-   - `title` (EN + RU), `slugEn`, `slugRu`, `tagline`, `positioning`, `whoItsFor` (≥ 1 item), `whatsIncluded` (≥ 1 item), `processSteps` (≥ 1 item), `finalCta`, `seo`.
-4. **One Case Study** — needed for the homepage's `selectedWork` (min 2) and for `/work` to render.
-   - `title`, `client`, `slugEn`, `slugRu`, `publishedAt`, `services` (≥ 1 ref), `heroImage`, `summary`, `atAGlance` (≥ 1), `bodyEn`, `bodyRu`, `finalCta`, `seo`. Add a second case study if you want the homepage's `selectedWork` to satisfy its min-2 constraint on publish.
-5. **Home page** (singleton) — required for HomeHero to render.
-   - **For HomeHero specifically**, fill `heroHeading` (EN + RU), `heroLead` (EN + RU), and optionally `heroCta` (label + href like `/contact` + variant).
-   - The rest of the homePage document (`positioningStatement`, `selectedWork`, `finalCta`, `seo`) is required by the schema on publish, even though only hero fields are rendered right now. Fill them minimally to get a published document.
-6. **About / Contact / Work index / Blog index / Thank you page** (singletons) — each requires at least the hero text + `seo`. None of these render real sections yet, so you can leave them as drafts until their sections are built.
+Per-document publish floor:
 
-Tip: on first load of `/studio`, each pinned singleton sidebar entry is an empty shell — clicking it opens the blank document editor. Publish is gated by validation, but saving as draft works without it.
+| Document | Required to publish | Notes |
+| --- | --- | --- |
+| **Global settings** | `brandName` (has `initialValue: "FIRFAROV"`) | Tagline, email, default SEO strongly recommended before launch but not blocking. `primaryEmail` still validates email format when filled. |
+| **Home page** | `heroHeading` | `heroLead`, `heroCta`, `positioningStatement`, `selectedWork`, `finalCta`, `seo` — all optional. |
+| **About page** | `heroStatement` | Body Portable Text, principles, final CTA, SEO — all optional. |
+| **Contact page** | `heroHeading` | Contact methods, FAQ refs, SEO — optional. |
+| **Work index / Blog index / Thank-you page** | primary heading (`heroHeading` / `heading`) | SEO optional (falls back to globalSettings). |
+| **Service** | `title`, `slugEn`, `slugRu` | All body fields (tagline, positioning, process, CTAs, SEO) optional. A stub service with only slugs is enough to satisfy `caseStudy.services[]` references. |
+| **Case study** | `title`, `slugEn`, `slugRu`, `publishedAt` | Client, services, hero image, summary, `atAGlance`, body, final CTA, SEO — all optional. Arrays with inner required fields (`atAGlance[].label`, etc.) still enforce completeness *per item* — those fire only when an item is added. |
+| **Blog post** | `title`, `slugEn`, `slugRu`, `publishedAt` | Author, excerpt, body, SEO — optional. |
+| **Blog category** | `title`, `slugEn`, `slugRu` | |
+| **FAQ item** | `question`, `answer` | A Q&A without both parts is noise. |
+| **Author** | `name` | Role, bio, photo, socials — optional. |
+| **Legal page** | `slug` (enum), `title`, `lastUpdated` | Body content obviously needed before real launch, but not a publish gate. |
+
+Integrity gates that stay in place:
+- `mediaAsset.image` and `mediaAsset.alt` — an image without alt text is an accessibility hole. Only fires when an editor actually adds a media asset.
+- `ctaBlock.label` and `ctaBlock.href` — a CTA without either is broken. Only fires when a CTA is added.
+- `slug` uniqueness — data integrity, not authoring friction.
+- `href` format check on CTAs — must start with `/`, `http(s)://`, `mailto:`, or `tel:`.
+- Inner required fields on array items (e.g. `approachItems[].heading`, `processSteps[].description`) — fire only when an item is added, so they don't block publish of a document with an empty or absent array.
+
+**Minimum to see HomeHero + HomePositioning render:** create `Home page`, fill `heroHeading` (EN or RU — or both), optionally `heroLead`, `heroCta`, `positioningStatement`. Publish. That's it — no other document required.
+
+Tip: on first load of `/studio`, each pinned singleton sidebar entry is an empty shell. Click to open the editor. Drafts save without validation; publish enforces the floor above.
 
 ## What is still placeholder
 

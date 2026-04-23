@@ -3,6 +3,13 @@ import { defineField, defineType } from "sanity";
 /**
  * A single service offering published at /services/[slug]. Slugs are locale-specific.
  * Field shape mirrors the approved service-page sections, kept flat for MVP.
+ *
+ * **MVP publish floor**: `title`, `slugEn`, `slugRu`. A service stub with only those fields is
+ * enough to satisfy `caseStudy.services[]` references, so a case study can publish before the
+ * full service page copy is written. Everything else fills in progressively.
+ *
+ * Inner array items (processSteps) still require heading + description — an unnamed process
+ * step is noise — but only when added, so empty `processSteps` doesn't block publish.
  */
 export const service = defineType({
   name: "service",
@@ -55,14 +62,12 @@ export const service = defineType({
       type: "localizedText",
       group: "positioning",
       description: "One line that sits directly under the service title.",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "positioning",
       title: "Positioning statement",
       type: "localizedText",
       group: "positioning",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "whoItsFor",
@@ -70,7 +75,6 @@ export const service = defineType({
       type: "array",
       group: "offering",
       of: [{ type: "localizedText" }],
-      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: "whatsIncluded",
@@ -78,7 +82,6 @@ export const service = defineType({
       type: "array",
       group: "offering",
       of: [{ type: "localizedText" }],
-      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: "processSteps",
@@ -105,7 +108,6 @@ export const service = defineType({
           preview: { select: { title: "heading.en", subtitle: "heading.ru" } },
         },
       ],
-      validation: (rule) => rule.min(1),
     }),
     defineField({
       name: "deliverables",
@@ -151,14 +153,13 @@ export const service = defineType({
       title: "Final CTA",
       type: "ctaBlock",
       group: "cta",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "seo",
       title: "SEO",
       type: "seoMetadata",
       group: "seo",
-      validation: (rule) => rule.required(),
+      description: "Overrides the defaults from globalSettings when present.",
     }),
   ],
   orderings: [

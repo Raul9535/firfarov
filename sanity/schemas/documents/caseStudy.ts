@@ -7,6 +7,16 @@ import { portableTextConfig } from "../portableText";
  * per locale — Portable Text handles heading hierarchy, so editors don't need a field per section.
  * `atAGlance`, `keyDecisions`, and `outcomes` remain structured because they render as
  * non-body UI blocks on the frontend.
+ *
+ * **MVP publish floor**: `title`, `slugEn`, `slugRu`, `publishedAt`. Everything else is optional
+ * so an editor can stand up a stub case study (for the Work index grid or for `selectedWork`
+ * references) and fill in the narrative over time. The frontend treats every downstream field
+ * as optional and skips empty sections.
+ *
+ * Inner array items (atAGlance, keyDecisions, outcomes) still require their constituent fields —
+ * an approach item with no heading, or an outcome with no metric, is just noise. Those rules
+ * only fire when an item is added, so they don't block publish of a case study that has no
+ * extras filled in yet.
  */
 export const caseStudy = defineType({
   name: "caseStudy",
@@ -35,7 +45,6 @@ export const caseStudy = defineType({
       type: "localizedText",
       group: "meta",
       description: "Use 'Confidential' (in both locales) when the client is NDA'd.",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "slugEn",
@@ -66,14 +75,13 @@ export const caseStudy = defineType({
       type: "array",
       group: "meta",
       of: [{ type: "reference", to: [{ type: "service" }] }],
-      validation: (rule) => rule.required().min(1).unique(),
+      validation: (rule) => rule.unique(),
     }),
     defineField({
       name: "heroImage",
       title: "Hero image",
       type: "mediaAsset",
       group: "hero",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "summary",
@@ -82,7 +90,6 @@ export const caseStudy = defineType({
       group: "hero",
       description:
         "Short paragraph used in listings and as the case study's opening narrative.",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "atAGlance",
@@ -111,7 +118,7 @@ export const caseStudy = defineType({
           preview: { select: { title: "label.en", subtitle: "value.en" } },
         },
       ],
-      validation: (rule) => rule.min(1).max(8),
+      validation: (rule) => rule.max(8),
     }),
     defineField({
       name: "bodyEn",
@@ -121,7 +128,6 @@ export const caseStudy = defineType({
       description:
         "Context, approach, the work, and key narrative. Use H2/H3 headings to structure sections.",
       of: portableTextConfig,
-      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: "bodyRu",
@@ -129,7 +135,6 @@ export const caseStudy = defineType({
       type: "array",
       group: "body",
       of: portableTextConfig,
-      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: "keyDecisions",
@@ -212,14 +217,13 @@ export const caseStudy = defineType({
       title: "Final CTA",
       type: "ctaBlock",
       group: "cta",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "seo",
       title: "SEO",
       type: "seoMetadata",
       group: "seo",
-      validation: (rule) => rule.required(),
+      description: "Overrides the defaults from globalSettings when present.",
     }),
   ],
   orderings: [

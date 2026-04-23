@@ -6,6 +6,11 @@ import { defineField, defineType } from "sanity";
  *
  * Used for: titles, headlines, short paragraphs, labels, alt text, meta description.
  * For long-form body content, use parallel `bodyEn` / `bodyRu` Portable Text fields instead.
+ *
+ * **MVP-relaxed validation:** neither `en` nor `ru` is required at this level. Editors can ship
+ * EN first and fill RU later (or vice versa). The frontend's `pickLocalized()` helper falls
+ * back to the other locale when the primary one is empty, so partial translations render fine.
+ * Fields that the app absolutely cannot function without stay required at the *document* level.
  */
 export const localizedText = defineType({
   name: "localizedText",
@@ -16,13 +21,13 @@ export const localizedText = defineType({
       name: "en",
       title: "English",
       type: "string",
-      validation: (rule) => rule.required().min(1).max(500),
+      validation: (rule) => rule.max(500),
     }),
     defineField({
       name: "ru",
       title: "Russian",
       type: "string",
-      validation: (rule) => rule.required().min(1).max(500),
+      validation: (rule) => rule.max(500),
     }),
   ],
   options: {

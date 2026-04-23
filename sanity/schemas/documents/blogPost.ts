@@ -4,6 +4,9 @@ import { portableTextConfig } from "../portableText";
 /**
  * Long-form writing published at /blog/[slug]. Body is Portable Text in parallel EN/RU fields.
  * Keep category references optional — a post can live uncategorized.
+ *
+ * **MVP publish floor**: `title`, `slugEn`, `slugRu`, `publishedAt`. Author, excerpt, bodies, and
+ * SEO are strongly recommended but not blocking — editors can stub a post and fill content later.
  */
 export const blogPost = defineType({
   name: "blogPost",
@@ -51,7 +54,6 @@ export const blogPost = defineType({
       type: "reference",
       group: "meta",
       to: [{ type: "author" }],
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "categories",
@@ -74,7 +76,6 @@ export const blogPost = defineType({
       group: "content",
       description:
         "Shown in listings and as OG fallback when seo.description is empty. 140–180 chars.",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "bodyEn",
@@ -82,7 +83,6 @@ export const blogPost = defineType({
       type: "array",
       group: "content",
       of: portableTextConfig,
-      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: "bodyRu",
@@ -90,14 +90,13 @@ export const blogPost = defineType({
       type: "array",
       group: "content",
       of: portableTextConfig,
-      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: "seo",
       title: "SEO",
       type: "seoMetadata",
       group: "seo",
-      validation: (rule) => rule.required(),
+      description: "Overrides the defaults from globalSettings when present.",
     }),
   ],
   orderings: [

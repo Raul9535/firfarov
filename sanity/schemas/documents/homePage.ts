@@ -5,6 +5,10 @@ import { defineField, defineType } from "sanity";
  * Each field maps roughly to one approved home section, but we intentionally keep field shapes
  * flat (localizedText, arrays of simple items) rather than modeling deep section structure — the
  * layout lives on the frontend, not in the CMS.
+ *
+ * **MVP publish floor**: only `heroHeading` is required. Every other field is optional so editors
+ * can publish a working homepage as soon as the hero copy is written, and fill the rest as
+ * sections come online. The frontend skips any section whose source fields are empty.
  */
 export const homePage = defineType({
   name: "homePage",
@@ -30,7 +34,6 @@ export const homePage = defineType({
       type: "localizedText",
       group: "hero",
       description: "Supporting line under the hero heading.",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "heroCta",
@@ -44,16 +47,15 @@ export const homePage = defineType({
       type: "localizedText",
       group: "body",
       description: "Short, sharp statement of what FIRFAROV is and who it's for.",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "selectedWork",
       title: "Selected work",
       type: "array",
       group: "body",
-      description: "Featured case studies, displayed in order. 2–6 items.",
+      description: "Featured case studies, displayed in order. Up to 6 items.",
       of: [{ type: "reference", to: [{ type: "caseStudy" }] }],
-      validation: (rule) => rule.required().min(2).max(6).unique(),
+      validation: (rule) => rule.max(6).unique(),
     }),
     defineField({
       name: "servicesOverviewIntro",
@@ -107,14 +109,13 @@ export const homePage = defineType({
       title: "Final CTA",
       type: "ctaBlock",
       group: "cta",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "seo",
       title: "SEO",
       type: "seoMetadata",
       group: "seo",
-      validation: (rule) => rule.required(),
+      description: "Overrides the defaults from globalSettings when present.",
     }),
   ],
   preview: {

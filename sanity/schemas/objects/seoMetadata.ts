@@ -1,9 +1,13 @@
 import { defineField, defineType } from "sanity";
 
 /**
- * Required on every page-level document.
  * Pairs with lib/seo/metadata.ts — `title` becomes the <title>, `description` becomes the meta
  * description, `ogImage` becomes the OG/Twitter card image. `noIndex` flips robots to `noindex`.
+ *
+ * **MVP-relaxed**: inner fields are no longer individually required. The whole `seo` object is
+ * optional at each page-level document, and when present any subset of fields can be filled.
+ * The frontend's `buildMetadata()` falls back to `globalSettings.defaultSeo`, then to hard-coded
+ * site defaults, so nothing downstream breaks when fields are missing.
  */
 export const seoMetadata = defineType({
   name: "seoMetadata",
@@ -16,7 +20,6 @@ export const seoMetadata = defineType({
       type: "localizedText",
       description:
         "Shown in browser tabs, search results, and social cards. Aim for 50–60 characters.",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "description",
@@ -24,7 +27,6 @@ export const seoMetadata = defineType({
       type: "localizedText",
       description:
         "Shown in search results and social cards. Aim for 140–160 characters.",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "ogImage",

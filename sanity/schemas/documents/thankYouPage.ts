@@ -2,6 +2,8 @@ import { defineField, defineType } from "sanity";
 
 /**
  * Singleton. Shown after a successful contact submission at /thank-you.
+ *
+ * **MVP publish floor**: only `heading`.
  */
 export const thankYouPage = defineType({
   name: "thankYouPage",
@@ -18,7 +20,6 @@ export const thankYouPage = defineType({
       name: "message",
       title: "Message",
       type: "localizedText",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "nextSteps",
@@ -51,7 +52,7 @@ export const thankYouPage = defineType({
       name: "seo",
       title: "SEO",
       type: "seoMetadata",
-      validation: (rule) => rule.required(),
+      description: "Overrides the defaults from globalSettings when present.",
     }),
   ],
   preview: {

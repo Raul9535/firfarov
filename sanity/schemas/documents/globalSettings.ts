@@ -5,6 +5,11 @@ import { defineField, defineType } from "sanity";
  * brand name, tagline, primary contact email, socials, and default SEO fallbacks.
  *
  * Studio wiring note: enforce a single document via deskStructure once the Studio is mounted.
+ *
+ * **MVP publish floor**: only `brandName` (which has `initialValue: "FIRFAROV"`, so it's effectively
+ * pre-filled on first create). Tagline, email, and default SEO are strongly recommended but optional
+ * for publish — the frontend degrades gracefully when they're missing. `primaryEmail` still validates
+ * as an email format when filled.
  */
 export const globalSettings = defineType({
   name: "globalSettings",
@@ -30,14 +35,13 @@ export const globalSettings = defineType({
       type: "localizedText",
       group: "brand",
       description: "One-line positioning shown in header, footer, and OG defaults.",
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: "primaryEmail",
       title: "Primary email",
       type: "string",
       group: "contact",
-      validation: (rule) => rule.required().email(),
+      validation: (rule) => rule.email(),
     }),
     defineField({
       name: "socialLinks",
@@ -71,8 +75,7 @@ export const globalSettings = defineType({
       type: "seoMetadata",
       group: "seo",
       description:
-        "Used as a fallback anywhere a page doesn't define its own SEO metadata.",
-      validation: (rule) => rule.required(),
+        "Used as a fallback anywhere a page doesn't define its own SEO metadata. Strongly recommended before public launch.",
     }),
   ],
   preview: {

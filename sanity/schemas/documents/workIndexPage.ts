@@ -2,6 +2,8 @@ import { defineField, defineType } from "sanity";
 
 /**
  * Singleton. Header/intro copy for /work. The case-study grid itself is populated from caseStudy documents.
+ *
+ * **MVP publish floor**: only `heroHeading`.
  */
 export const workIndexPage = defineType({
   name: "workIndexPage",
@@ -32,7 +34,7 @@ export const workIndexPage = defineType({
       name: "seo",
       title: "SEO",
       type: "seoMetadata",
-      validation: (rule) => rule.required(),
+      description: "Overrides the defaults from globalSettings when present.",
     }),
   ],
   preview: {

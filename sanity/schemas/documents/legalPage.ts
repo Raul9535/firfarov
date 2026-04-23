@@ -4,6 +4,9 @@ import { portableTextConfig } from "../portableText";
 /**
  * Legal pages (/privacy, /terms, /cookies). The slug is a fixed enum — URLs are shared
  * across locales for these pages, so there's no slugEn/slugRu split.
+ *
+ * **MVP publish floor**: `slug`, `title`, `lastUpdated`. Body content is obviously required
+ * before any real launch, but leaving it optional lets editors draft the shell alongside a lawyer.
  */
 export const legalPage = defineType({
   name: "legalPage",
@@ -42,20 +45,18 @@ export const legalPage = defineType({
       title: "Body (English)",
       type: "array",
       of: portableTextConfig,
-      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: "bodyRu",
       title: "Body (Russian)",
       type: "array",
       of: portableTextConfig,
-      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: "seo",
       title: "SEO",
       type: "seoMetadata",
-      validation: (rule) => rule.required(),
+      description: "Overrides the defaults from globalSettings when present.",
     }),
   ],
   preview: {
