@@ -9,18 +9,23 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "sanity:extract": "sanity schema extract --path=./sanity/schema.json",
+    "sanity:typegen": "sanity typegen generate"
   },
   "dependencies": {
     "next": "^15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "sanity": "^3.75.0",
+    "@sanity/vision": "^3.75.0",
     "next-sanity": "^9.8.27",
     "@sanity/image-url": "^1.1.0",
     "@supabase/supabase-js": "^2.48.1",
     "@sentry/nextjs": "^8.48.0",
     "framer-motion": "^11.18.0",
     "resend": "^4.1.2",
+    "styled-components": "^6.1.13",
     "zod": "^3.24.1"
   },
   "devDependencies": {
