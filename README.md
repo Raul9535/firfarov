@@ -93,28 +93,71 @@ Bilingual pattern: one document per entity; every translatable field uses `local
 
 Required on every page-level document: `seo: seoMetadata` with required `title` + `description`.
 
+## Sanity Studio
+
+Studio is embedded in the same Next.js app at `/studio/*`:
+
+- `sanity.config.ts` — Studio config. Loads `schemaTypes` from `sanity/schemas`, plugs in `structureTool` (with `sanity/structure.ts`) and `visionTool`, and enforces singletons by filtering `templates` and `document.actions`.
+- `sanity.cli.ts` — consumed by the `sanity` CLI for `schema extract` / `typegen` / `deploy`. Reads the same env vars as the Studio config.
+- `sanity/structure.ts` — deskStructure that pins singleton documents at the top of the sidebar and lists collections underneath.
+- `sanity/env.ts` — single source of truth for `NEXT_PUBLIC_SANITY_PROJECT_ID` / `NEXT_PUBLIC_SANITY_DATASET` / `NEXT_PUBLIC_SANITY_API_VERSION`. Falls back to placeholders so `next build` never fails on missing env.
+- `app/studio/[[...tool]]/page.tsx` + `Studio.tsx` — mounts `<NextStudio />` inside a client-boundary component. Re-exports `metadata` / `viewport` from `next-sanity/studio`.
+- `app/layout.tsx` branches on `pathname.startsWith("/studio")` so the Studio renders inside a bare `<html>` shell with no site header/footer/Plausible — middleware still runs harmlessly, it only sets `x-pathname`.
+
+### Studio env vars
+
+Set these in `.env.local` before running Studio or the Sanity CLI:
+
+```
+NEXT_PUBLIC_SANITY_PROJECT_ID=...   # from sanity.io/manage
+NEXT_PUBLIC_SANITY_DATASET=production
+NEXT_PUBLIC_SANITY_API_VERSION=2025-01-01
+SANITY_API_READ_TOKEN=...           # optional, only for draft previews
+```
+
+### Verifying Studio works
+
+1. Install dependencies: `npm install` (brings in `sanity`, `@sanity/vision`, `styled-components`).
+2. Create a Sanity project at [sanity.io/manage](https://www.sanity.io/manage) and grab `projectId` + `dataset`.
+3. In that project's CORS origins, allow `http://localhost:3000` (credentials enabled).
+4. Copy `.env.example` → `.env.local` and fill in the `NEXT_PUBLIC_SANITY_*` vars.
+5. `npm run dev`, then open [http://localhost:3000/studio](http://localhost:3000/studio). Log in with Google/GitHub/email.
+6. You should see "Pages" (with the seven pinned singletons) and the collections below — service, case study, blog post, blog category, FAQ item, author, legal page. Try creating a blog post and confirm slugs + localized fields behave as expected.
+
+### Typegen
+
+Once the Studio is connected:
+
+```bash
+npm run sanity:extract   # reads schemas via sanity.cli.ts → writes sanity/schema.json
+npm run sanity:typegen   # reads schema.json + GROQ queries → writes sanity/sanity.types.ts
+```
+
+Config lives in `sanity-typegen.json`. Typegen scans the whole tree for GROQ (it detects `/* groq */` template literals), so queries in `lib/sanity/queries.ts` get typed automatically. Once generated, replace the hand-written stand-ins in `lib/sanity/types.ts` with imports from `sanity/sanity.types.ts` and add a typed `sanityFetch()` wrapper.
+
 ## What is still placeholder
 
-- **Sanity Studio wiring** — schemas exist but no `sanity.config.ts` / `sanity.cli.ts`, no Studio route (`app/studio/[[...tool]]/page.tsx`), no `deskStructure` singleton enforcement. The schemas are ready to be imported as soon as those are added.
-- **Generated types** — `lib/sanity/types.ts` still holds hand-written placeholders. Once the Studio is wired, run `npm run sanity:extract && npm run sanity:typegen` and swap to the generated output.
-- **Typed fetch helpers** — `lib/sanity/queries.ts` exports GROQ strings but there's no `sanityFetch()` wrapper yet that ties queries to generated types.
-- **Real page sections** — non-home pages currently render `<SectionPlaceholder />` stacks that list the approved section order for each page type. Home sections exist as thin component files wrapping the same placeholder.
-- **Brand fonts** — `styles/fonts.css` is empty; wire `Inter` / `Fraunces` / `JetBrains Mono` (or the final brand choice) via `next/font` when finalized.
-- **Sentry wrapping** — `@sentry/nextjs` installed but `next.config.mjs` is not yet wrapped; no `sentry.client.config.ts` / `sentry.server.config.ts` files exist.
-- **Plausible** — script tag conditionally rendered in `app/layout.tsx`; no custom events wired yet.
-- **Contact form UI** — API route (`/api/contact`) is ready; the actual form UI component is not yet built.
-- **Supabase table** — `contact_submissions` table needs to be created with columns matching `ContactFormInput`.
+- **Studio not yet connected to a project** — the wiring is done; a real Sanity projectId + dataset still has to be created and set in `.env.local`.
+- **Generated types** — `lib/sanity/types.ts` still holds hand-written placeholders. Run `npm run sanity:extract && npm run sanity:typegen` once the project is connected, then swap to the generated output.
+- **Typed fetch helpers** — `lib/sanity/queries.ts` exports GROQ strings; there's no `sanityFetch()` wrapper yet that binds queries to generated types.
+- **Seed content** — no singleton instances exist yet. On first Studio load each pinned sidebar entry will be an empty document waiting to be created.
+- **Real page sections** — non-home pages currently render `<SectionPlaceholder />` stacks. Home sections exist as thin component files wrapping the placeholder.
+- **Brand fonts** — `styles/fonts.css` is empty; wire `Inter` / `Fraunces` / `JetBrains Mono` (or final brand choice) via `next/font` when finalized.
+- **Sentry wrapping** — `@sentry/nextjs` installed but `next.config.mjs` not yet wrapped; no `sentry.client.config.ts` / `sentry.server.config.ts`.
+- **Plausible** — script tag conditionally rendered; no custom events wired.
+- **Contact form UI** — API route (`/api/contact`) ready; form UI component not built.
+- **Supabase table** — `contact_submissions` table needs to be created.
 
 ## What to build next
 
-1. **Sanity Studio wiring** — create a Sanity project, add `sanity.config.ts` importing `schemaTypes` from `sanity/schemas`, add `sanity.cli.ts`, mount the Studio at `/studio`, and author a deskStructure that pins the singleton types listed in `sanity/schemas/index.ts`.
-2. **Typegen** — run `npm run sanity:extract && npm run sanity:typegen`, then replace the hand-written types in `lib/sanity/types.ts` with the generated ones. Wrap GROQ queries in a typed `sanityFetch()` helper in `lib/sanity/`.
-3. **Seed content** — create one record per singleton (global settings, home page, about page, contact page, work index, blog index, thank you) plus a few services, a case study, and a blog post to drive real rendering.
+1. **Connect a real Sanity project** — create project at sanity.io/manage, whitelist localhost in CORS, populate `.env.local`, verify `/studio` loads.
+2. **Typegen** — run `npm run sanity:extract && npm run sanity:typegen`, replace `lib/sanity/types.ts` stand-ins with generated types, add a typed `sanityFetch()` helper in `lib/sanity/`.
+3. **Seed content** — author one record per singleton, plus 1–2 services, a case study, and a blog post, to drive real rendering.
 4. **Home sections** — replace the eight `SectionPlaceholder` stubs in `components/sections/home/` with real implementations that read from `homePage`.
-5. **Other page sections** — as each page is designed, lift its placeholders into real section components under `components/sections/<page>/`, pulling from the corresponding document.
-6. **Brand fonts** — wire through `styles/fonts.css` or `next/font`, update tokens in `styles/tokens.css`.
+5. **Other page sections** — as each page is designed, lift its placeholders into real section components under `components/sections/<page>/`.
+6. **Brand fonts** — wire through `styles/fonts.css` or `next/font`; update tokens in `styles/tokens.css`.
 7. **Sentry** — add `sentry.{client,server,edge}.config.ts`, wrap `next.config.mjs` with `withSentryConfig`, capture from `app/error.tsx`.
-8. **Contact form UI** — client component with Zod schema imported from `lib/forms/schema.ts`, posting to `/api/contact`, redirecting to `/thank-you`.
+8. **Contact form UI** — client component with the Zod schema from `lib/forms/schema.ts`, posting to `/api/contact`, redirecting to `/thank-you`.
 9. **Supabase migration** — create `contact_submissions` table and RLS policies.
-10. **Dynamic sitemap** — extend `app/sitemap.ts` to include case studies, blog posts, and blog categories from Sanity.
-11. **Future v2** — AI-assisted blog workflow, Telegram distribution, FAQ schema expansion.
+10. **Dynamic sitemap** — extend `app/sitemap.ts` with case studies, blog posts, blog categories from Sanity.
+11. **Future v2** — AI-assisted blog workflow, Telegram distribution, expanded FAQ JSON-LD.

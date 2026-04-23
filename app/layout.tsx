@@ -19,6 +19,16 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const headerList = await headers();
   const pathname = headerList.get("x-pathname") ?? "/";
+
+  // The embedded Studio needs a clean shell — no site chrome, no analytics.
+  if (pathname.startsWith("/studio")) {
+    return (
+      <html lang="en">
+        <body>{children}</body>
+      </html>
+    );
+  }
+
   const locale = resolveLocaleFromPath(pathname);
 
   return (
