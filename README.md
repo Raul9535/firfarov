@@ -25,7 +25,11 @@ npm run dev
 ## Structure
 
 ```
-app/            Routes. EN at root, RU under /ru. Server Components by default.
+app/
+  layout.tsx    Root layout — <html>/<body> + locale detection only. No chrome.
+  (site)/       Route group for all public pages. Owns SiteHeader, SiteFooter, Plausible.
+    layout.tsx, page.tsx, about/, services/, work/, blog/, contact/, ru/, …
+  studio/       Embedded Sanity Studio (sibling to (site) — no site chrome inherited).
   api/contact/  Contact form endpoint (Zod → Resend + Supabase)
 components/
   ui/           Design-system primitives (Container, Button)
@@ -47,16 +51,21 @@ styles/
   tokens.css    Design tokens — single source of truth
   fonts.css     @font-face declarations (placeholder)
 public/         Static assets
-middleware.ts   Exposes x-pathname so the root layout can derive locale
+middleware.ts   Forwards x-pathname on the *request* headers so Server Components derive locale
 ```
 
 ## Routing & i18n
 
 - EN is the default locale and lives at the root (`/about`, `/services/...`).
 - RU mirrors the same tree under `/ru`.
-- `middleware.ts` writes an `x-pathname` header so `app/layout.tsx` can set `<html lang>` without hitting client code.
+- All public pages live inside the `app/(site)/` route group. The group owns the `SiteHeader` / `SiteFooter` / Plausible chrome in `(site)/layout.tsx`. `/studio` is a sibling route outside the group, so it physically cannot inherit any of it.
+- `middleware.ts` forwards `x-pathname` on the **request** headers (via `NextResponse.next({ request: { headers } })`, not on the response headers — that distinction matters, see "Why /studio isolation is a route group, not a pathname check" below). Both the root layout and `(site)/layout.tsx` read it via `headers().get("x-pathname")`.
 - Never hard-code locale-prefixed hrefs. Always route via `localizePath(path, locale)` from `lib/i18n/routing.ts`.
 - `buildMetadata()` in `lib/seo/metadata.ts` emits canonical + `<link rel="alternate" hreflang="…">` automatically.
+
+### Why /studio isolation is a route group, not a pathname check
+
+The first cut at isolating Studio branched inside `app/layout.tsx` on `pathname.startsWith("/studio")`. That check never fired because the middleware was setting `x-pathname` on the outgoing **response** headers, while `headers()` in Server Components reads **request** headers — so the chrome always rendered around Studio. Even with the middleware bug fixed, keeping chrome in the root layout meant one line of defence between Studio and the site. Route groups are the proper App Router primitive for this: the root layout owns only `<html>` / `<body>`, the `(site)` group owns chrome, and `/studio` as a sibling segment can't see either.
 
 ## Architecture principles (enforced)
 
@@ -102,7 +111,7 @@ Studio is embedded in the same Next.js app at `/studio/*`:
 - `sanity/structure.ts` — deskStructure that pins singleton documents at the top of the sidebar and lists collections underneath.
 - `sanity/env.ts` — single source of truth for `NEXT_PUBLIC_SANITY_PROJECT_ID` / `NEXT_PUBLIC_SANITY_DATASET` / `NEXT_PUBLIC_SANITY_API_VERSION`. Falls back to placeholders so `next build` never fails on missing env.
 - `app/studio/[[...tool]]/page.tsx` + `Studio.tsx` — mounts `<NextStudio />` inside a client-boundary component. Re-exports `metadata` / `viewport` from `next-sanity/studio`.
-- `app/layout.tsx` branches on `pathname.startsWith("/studio")` so the Studio renders inside a bare `<html>` shell with no site header/footer/Plausible — middleware still runs harmlessly, it only sets `x-pathname`.
+- Studio is isolated from the public site via App Router route groups: public routes live under `app/(site)/` with their own `(site)/layout.tsx` (SiteHeader + SiteFooter + Plausible). The Studio route is a sibling segment at `app/studio/...`, so none of that chrome can reach it. The root `app/layout.tsx` owns only `<html>`/`<body>` + locale detection.
 
 ### Studio env vars
 

@@ -1,13 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { headers } from "next/headers";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { siteConfig } from "@/config/site";
-import { buildMetadata } from "@/lib/seo/metadata";
 import { resolveLocaleFromPath } from "@/lib/i18n/routing";
+import { buildMetadata } from "@/lib/seo/metadata";
 
 import "./globals.css";
+
+/**
+ * Root layout. Deliberately minimal — it owns `<html>` and `<body>` plus locale detection,
+ * nothing else.
+ *
+ * Public site chrome (header, footer, analytics, `bg-canvas`) lives in `app/(site)/layout.tsx`
+ * so the embedded Studio at `/studio` — which is a sibling route outside the `(site)` group —
+ * cannot inherit any of it.
+ */
 
 export const metadata: Metadata = buildMetadata({ locale: "en", path: "/" });
 
@@ -19,33 +24,11 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const headerList = await headers();
   const pathname = headerList.get("x-pathname") ?? "/";
-
-  // The embedded Studio needs a clean shell — no site chrome, no analytics.
-  if (pathname.startsWith("/studio")) {
-    return (
-      <html lang="en">
-        <body>{children}</body>
-      </html>
-    );
-  }
-
   const locale = resolveLocaleFromPath(pathname);
 
   return (
     <html lang={locale}>
-      <body className="min-h-screen bg-canvas text-ink antialiased">
-        <SiteHeader locale={locale} />
-        <main>{children}</main>
-        <SiteFooter locale={locale} />
-        {siteConfig.plausibleDomain ? (
-          <Script
-            defer
-            data-domain={siteConfig.plausibleDomain}
-            src="https://plausible.io/js/script.js"
-            strategy="afterInteractive"
-          />
-        ) : null}
-      </body>
+      <body className="min-h-screen antialiased">{children}</body>
     </html>
   );
 }
