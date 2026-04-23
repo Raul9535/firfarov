@@ -1,31 +1,59 @@
-// Placeholder domain types. These will be replaced by generated types from Sanity schemas
-// (run `sanity typegen generate` once schemas are defined).
-//
-// Shape mirrors the approved content model:
-//   - field-level bilingual localization via LocalizedText
-//   - reusable groups: LocalizedText, SEOMetadata, MediaAsset, CTABlock, RichContentBlock
+/**
+ * Typed surface of the Sanity content model.
+ *
+ * Everything in this file is sourced from the typegen output at `sanity/sanity.types.ts`.
+ * Regenerate with `npm run sanity:types` after any schema or query change.
+ *
+ * The re-exports below are curated — we expose document and object types that the
+ * frontend will import by name, plus all query result types. If you need something that
+ * isn't re-exported here, import it directly from `@/sanity/sanity.types`.
+ */
 
-import type { Locale } from "@/lib/i18n/config";
+// Document types
+export type {
+  AboutPage,
+  Author,
+  BlogCategory,
+  BlogIndexPage,
+  BlogPost,
+  CaseStudy,
+  ContactPage,
+  FaqItem,
+  GlobalSettings,
+  HomePage,
+  LegalPage,
+  Service,
+  ThankYouPage,
+  WorkIndexPage,
+} from "../../sanity/sanity.types";
 
-export type LocalizedText = Record<Locale, string>;
+// Reusable object types
+export type {
+  CtaBlock,
+  LocalizedText,
+  MediaAsset,
+  SeoMetadata,
+} from "../../sanity/sanity.types";
 
-export type MediaAsset = {
-  url: string;
-  alt: LocalizedText;
-  width?: number;
-  height?: number;
-};
-
-export type SEOMetadata = {
-  title: LocalizedText;
-  description: LocalizedText;
-  ogImage?: MediaAsset;
-};
-
-export type CTABlock = {
-  label: LocalizedText;
-  href: string;
-};
-
-// Portable Text payloads are typed once Sanity schemas are generated.
-export type RichContentBlock = unknown;
+// Query result types — one per `defineQuery(...)` in `./queries.ts`
+export type {
+  AboutPageQueryResult,
+  AllBlogCategorySlugsQueryResult,
+  AllBlogPostSlugsQueryResult,
+  AllCaseStudySlugsQueryResult,
+  AllServicesQueryResult,
+  BlogCategoryBySlugQueryResult,
+  BlogIndexPageQueryResult,
+  BlogPostBySlugQueryResult,
+  BlogPostsByCategoryQueryResult,
+  CaseStudyBySlugQueryResult,
+  ContactPageQueryResult,
+  GlobalSettingsQueryResult,
+  HomePageQueryResult,
+  LatestBlogPostsQueryResult,
+  LatestCaseStudiesQueryResult,
+  LegalPageBySlugQueryResult,
+  ServiceBySlugQueryResult,
+  ThankYouPageQueryResult,
+  WorkIndexPageQueryResult,
+} from "../../sanity/sanity.types";

@@ -16,6 +16,6 @@ const en = {
     en: "EN",
     ru: "RU",
   },
-} as const;
+};
 
 export default en;
