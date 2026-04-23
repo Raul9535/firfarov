@@ -16,12 +16,16 @@ type HomeHeroProps = {
  * default 60s ISR window for now; switch to tag-based revalidation once the Sanity webhook
  * route exists.
  *
- * Layout:
- *   - Heading: display serif, max-w-5xl so short copy doesn't crowd to the left.
- *     `text-balance` evens out line breaks; `tracking-tight` fixes the airy default for Fraunces.
- *   - Lead: max-w-2xl (~65ch at text-xl) — the comfortable reading width, deliberately narrower
- *     than the heading for editorial hierarchy.
- *   - CTA: size="lg" so it has real presence next to the display type.
+ * Layout composition:
+ *   - Full-viewport section (min-h-[88vh]) with content bottom-anchored via `mt-auto`.
+ *     That creates a deliberate void above the heading — the most distinctive editorial move,
+ *     signalling "this is the entrance to the site" before anything is read.
+ *   - A short accent-colored rule marks where the content column begins. Single brand color,
+ *     minimal geometry, no invented copy.
+ *   - Heading uses `clamp(4rem, 9vw, 9rem)` — 64 → 144px smoothly, no breakpoint jumps.
+ *     Tight leading (0.98) and tight tracking (-0.02em) for display-serif weight.
+ *   - Lead held at `max-w-xl` (narrower than heading) to preserve editorial hierarchy.
+ *   - CTA is `size="lg"` with a trailing arrow for decisive forward motion.
  *
  * Missing fields are skipped (empty heading → no <h1>, etc.) so a half-filled homePage
  * document still renders cleanly instead of bleeding empty nodes into the layout.
@@ -36,32 +40,46 @@ export async function HomeHero({ locale }: HomeHeroProps) {
   const showCta = Boolean(cta?.href && ctaLabel);
 
   return (
-    <section aria-labelledby="home-hero-heading" className="border-b border-rule">
-      <Container className="py-24 md:py-36 lg:py-48">
-        {heading ? (
-          <h1
-            id="home-hero-heading"
-            className="max-w-6xl text-balance font-serif text-6xl leading-[1.02] tracking-tight text-ink md:text-[5.5rem] lg:text-[6.5rem] xl:text-[7.5rem]"
-          >
-            {heading}
-          </h1>
-        ) : null}
-        {lead ? (
-          <p className="mt-8 max-w-2xl text-lg leading-relaxed text-ink-muted md:mt-10 md:text-xl">
-            {lead}
-          </p>
-        ) : null}
-        {showCta && cta ? (
-          <div className="mt-12 md:mt-14">
-            <Button
-              href={resolveCtaHref(cta.href, locale)}
-              variant={cta.variant ?? "primary"}
-              size="lg"
+    <section
+      aria-labelledby="home-hero-heading"
+      className="flex min-h-[88vh] flex-col border-b border-rule"
+    >
+      <Container className="mt-auto pb-20 pt-12 md:pb-28 md:pt-16">
+        {/* Accent rule — print-editorial anchor in the single brand accent color. */}
+        <span
+          aria-hidden
+          className="inline-block h-[2px] w-16 bg-accent md:w-24"
+        />
+
+        <div className="mt-16 md:mt-24">
+          {heading ? (
+            <h1
+              id="home-hero-heading"
+              className="max-w-[70rem] text-balance font-serif text-[clamp(4rem,9vw,9rem)] leading-[0.98] tracking-[-0.02em] text-ink"
             >
-              {ctaLabel}
-            </Button>
-          </div>
-        ) : null}
+              {heading}
+            </h1>
+          ) : null}
+
+          {lead ? (
+            <p className="mt-8 max-w-xl text-lg leading-relaxed text-ink-muted md:mt-10 md:text-xl">
+              {lead}
+            </p>
+          ) : null}
+
+          {showCta && cta ? (
+            <div className="mt-12 md:mt-16">
+              <Button
+                href={resolveCtaHref(cta.href, locale)}
+                variant={cta.variant ?? "primary"}
+                size="lg"
+              >
+                {ctaLabel}
+                <span aria-hidden>→</span>
+              </Button>
+            </div>
+          ) : null}
+        </div>
       </Container>
     </section>
   );
