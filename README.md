@@ -199,7 +199,7 @@ Tip: on first load of `/studio`, each pinned singleton sidebar entry is an empty
 
 - **Studio not yet connected to a project** — the wiring is done; a real Sanity projectId + dataset still has to be created and set in `.env.local`.
 - **Seed content** — no singleton instances exist yet. On first Studio load each pinned sidebar entry will be an empty document waiting to be created.
-- **Real page sections** — non-home pages currently render `<SectionPlaceholder />` stacks. On the home page, `HomeHero` is the first real section (fetches from `homePage` via `sanityFetch`); the other seven home sections are still placeholders.
+- **Real page sections** — non-home pages currently render `<SectionPlaceholder />` stacks. On the home page, `HomeHero` and `HomePositioning` are real (both fetch `homePage` via `sanityFetch`, React dedupes to one call). The other six home sections are still placeholders.
 - **Brand fonts** — `styles/fonts.css` is empty; wire `Inter` / `Fraunces` / `JetBrains Mono` (or final brand choice) via `next/font` when finalized.
 - **Sentry wrapping** — `@sentry/nextjs` installed but `next.config.mjs` not yet wrapped; no `sentry.client.config.ts` / `sentry.server.config.ts`.
 - **Plausible** — script tag conditionally rendered; no custom events wired.
@@ -210,7 +210,7 @@ Tip: on first load of `/studio`, each pinned singleton sidebar entry is an empty
 
 1. **Connect a real Sanity project** — create project at sanity.io/manage, whitelist localhost in CORS, populate `.env.local`, verify `/studio` loads.
 2. **Seed content** — follow the order in "Seeding the minimum content" above.
-3. **Home sections (continued)** — `HomeHero` is real. Next: `HomePositioning` (reads `homePage.positioningStatement`), then `HomeSelectedWork` (reads `homePage.selectedWork` with `->` dereffing to case studies). Each follows the same pattern as `HomeHero`.
+3. **Home sections (continued)** — `HomeHero` + `HomePositioning` are real. Next: `HomeSelectedWork` (needs a new query with `->` deref of `selectedWork` → case studies), then `HomeServicesOverview` (queries the services collection). Each follows the same pattern.
 4. **Other page sections** — as each page is designed, lift its placeholders into real section components under `components/sections/<page>/`, fetching the matching document.
 5. **Brand fonts** — wire through `styles/fonts.css` or `next/font`; update tokens in `styles/tokens.css`.
 6. **Sentry** — add `sentry.{client,server,edge}.config.ts`, wrap `next.config.mjs` with `withSentryConfig`, capture from `app/error.tsx`.
