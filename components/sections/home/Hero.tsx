@@ -12,14 +12,22 @@ type HomeHeroProps = {
 
 /**
  * First real home section. Fetches the homePage document directly — React's request-level
- * cache dedupes when sibling sections query the same document. Revalidates on-demand via
- * the `homePage` tag (webhook hook is TODO).
+ * cache dedupes when sibling sections query the same document. Cache uses the wrapper's
+ * default 60s ISR window for now; switch to tag-based revalidation once the Sanity webhook
+ * route exists.
  *
- * Renders only what's filled in. Missing heading / lead / CTA are skipped rather than replaced
- * with placeholders, so an empty document yields a minimal (not broken) section.
+ * Layout:
+ *   - Heading: display serif, max-w-5xl so short copy doesn't crowd to the left.
+ *     `text-balance` evens out line breaks; `tracking-tight` fixes the airy default for Fraunces.
+ *   - Lead: max-w-2xl (~65ch at text-xl) — the comfortable reading width, deliberately narrower
+ *     than the heading for editorial hierarchy.
+ *   - CTA: size="lg" so it has real presence next to the display type.
+ *
+ * Missing fields are skipped (empty heading → no <h1>, etc.) so a half-filled homePage
+ * document still renders cleanly instead of bleeding empty nodes into the layout.
  */
 export async function HomeHero({ locale }: HomeHeroProps) {
-  const home = await sanityFetch(homePageQuery, { tags: ["homePage"] });
+  const home = await sanityFetch(homePageQuery);
 
   const heading = pickLocalized(home?.heroHeading, locale);
   const lead = pickLocalized(home?.heroLead, locale);
@@ -29,29 +37,30 @@ export async function HomeHero({ locale }: HomeHeroProps) {
 
   return (
     <section aria-labelledby="home-hero-heading" className="border-b border-rule">
-      <Container className="py-32 md:py-48">
-        <p className="font-mono text-xs uppercase tracking-widest text-ink-muted">
-          FIRFAROV
-        </p>
+      <Container className="py-24 md:py-36 lg:py-48">
         {heading ? (
           <h1
             id="home-hero-heading"
-            className="mt-8 max-w-4xl font-serif text-5xl leading-[1.05] text-ink md:text-7xl"
+            className="max-w-6xl text-balance font-serif text-6xl leading-[1.02] tracking-tight text-ink md:text-[5.5rem] lg:text-[6.5rem] xl:text-[7.5rem]"
           >
             {heading}
           </h1>
         ) : null}
         {lead ? (
-          <p className="mt-8 max-w-2xl text-lg text-ink-muted md:text-xl">{lead}</p>
+          <p className="mt-8 max-w-2xl text-lg leading-relaxed text-ink-muted md:mt-10 md:text-xl">
+            {lead}
+          </p>
         ) : null}
         {showCta && cta ? (
-          <Button
-            href={resolveCtaHref(cta.href, locale)}
-            variant={cta.variant ?? "primary"}
-            className="mt-12"
-          >
-            {ctaLabel}
-          </Button>
+          <div className="mt-12 md:mt-14">
+            <Button
+              href={resolveCtaHref(cta.href, locale)}
+              variant={cta.variant ?? "primary"}
+              size="lg"
+            >
+              {ctaLabel}
+            </Button>
+          </div>
         ) : null}
       </Container>
     </section>
