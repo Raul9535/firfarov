@@ -1,15 +1,17 @@
+/* All @import statements must come first per the CSS spec — interleaving them with
+   @source previously caused PostCSS to silently drop the component-scan declarations,
+   which left every utility used only in `components/` (font-serif, mx-auto, max-w-site,
+   px-site, justify-between, …) un-generated. */
 @import "tailwindcss";
+@import "../styles/fonts.css";
+@import "../styles/tokens.css";
 
-/* Explicit source paths — Tailwind v4 normally auto-detects from the project root, but
-   we declare every directory that contains class names so detection is deterministic
-   across HMR cycles, route groups, and glob edge cases. Paths are relative to this file. */
-@source "../app/**/*.{ts,tsx}";
+/* Tailwind v4 auto-detects classes by walking from this file's directory (app/), so
+   sources outside app/ must be declared explicitly. Without these, classes used only
+   in components / lib / config never make it into the compiled CSS. */
 @source "../components/**/*.{ts,tsx}";
 @source "../config/**/*.{ts,tsx}";
 @source "../lib/**/*.{ts,tsx}";
-
-@import "../styles/fonts.css";
-@import "../styles/tokens.css";
 
 @layer base {
   html {
