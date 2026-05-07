@@ -21,10 +21,55 @@ legal, `/ru/...` mirror. Технический стек и Sanity schema-кар
 ## Current Status
 
 - Branch: `hero-layout-polish` (PR [#1](https://github.com/Raul9535/firfarov/pull/1) → `main`).
-- Last verified: 2026-05-07 — `homePage` singleton наполнен AI-first контентом (heroHeading, heroLead, heroCta, positioningStatement, servicesOverviewIntro, 4 approachItems, 4 useCases, finalCta). selectedWork сброшен к `[]` (нет реальных кейсов). 7 из 8 home-секций теперь рендерят реальный AI-first контент; HomeSelectedWork корректно скрывается до появления кейсов.
+- Last verified: 2026-05-07 — `npm run typecheck` clean. Главная: 7 из 8 секций с реальным AI-first контентом. Service detail (EN+RU): 5 MVP-секций (Hero / Positioning / Who it's for / What's included / Final CTA), все 4 AI-сервиса наполнены — positioning + 3-4 audience items + 5 included items + finalCta.
 - Main blocker: `/blog → /insights` route migration ещё впереди; brand fonts не подключены; case studies в Sanity не созданы.
 
 ## Daily Log
+
+### 2026-05-07 — Service detail pages: AI-first MVP
+
+Goal:
+- Move /services/[slug] from "title + tagline + optional positioning" to a presentable 5-section MVP, then seed all four AI services with that content surface so the pages are immediately client-showable.
+
+Done:
+- Rewrote `app/(site)/services/[slug]/page.tsx` (EN) and `app/(site)/ru/services/[slug]/page.tsx` (RU mirror). Composition:
+  1. Hero — title + tagline at page-hero scale (max-w-5xl, text-5xl → text-7xl serif).
+  2. Positioning — single statement in 4|8 spine ("Positioning" / "Позиционирование" eyebrow LEFT, serif statement RIGHT).
+  3. Who it's for — bullet list of audience markers, hairline-separated, in 4|8 spine ("Who it's for" / "Для кого" eyebrow LEFT, list RIGHT).
+  4. What's included — same shape as Who it's for, eyebrow "What's included" / "Что входит".
+  5. Final CTA — 4|8 spine, eyebrow "Get started" / "Начать", Button at size="lg".
+- Every section returns null when its source field is empty, so a half-filled service still renders cleanly (no empty rails or section-headers without bodies).
+- Slug + locale routing, generateMetadata, notFound() — all unchanged from prior MVP.
+- Extended `scripts/seed-services.mjs`. Each of the four services now ships with positioning, whoItsFor[] (3–4 items), whatsIncluded[] (5 items), and finalCta. Stable `_key`s on every array item ("audience-1", "included-1", etc.) so editor edits in Studio survive a re-run rather than getting overwritten by name. Tiny `lt` / `ltKey` / `cta` constructors keep the content block readable.
+- Ran the script. Legacy docs already gone; four AI services replaced with the full MVP surface. Verified through a published-perspective fetch — every service has positioning, the right whoItsFor / whatsIncluded counts, and a finalCta with label + href + variant.
+
+Changed files:
+- `app/(site)/services/[slug]/page.tsx` — 3 new sections + Final CTA wired (was 2-section MVP).
+- `app/(site)/ru/services/[slug]/page.tsx` — RU mirror with localized eyebrows.
+- `scripts/seed-services.mjs` — content for positioning + whoItsFor + whatsIncluded + finalCta per service; small `lt`/`ltKey`/`cta` helpers.
+- `PROJECT_PROGRESS.md` — current status updated; this entry appended.
+
+Decisions:
+- 4|8 editorial spine kept on every section. Hero is the only break (full breadth, page entrance) — same convention as the homepage.
+- Hairline-separated rows for whoItsFor / whatsIncluded rather than a bulleted list or grid. Each row gets `py-5 md:py-6` and a bottom hairline; reads as an editorial contents list without competing with the tagline.
+- `createOrReplace` kept for services seed (not `createIfNotExists + patch.set` like homePage). Services were never hand-edited in Studio and the seed remains the source of truth; if that changes, switch patterns. Documented inline.
+- Section eyebrows ("Positioning", "Who it's for", "What's included", "Get started" + RU equivalents) live in code rather than the schema. They're framing labels, not content; they evolve with layout, not editor whim. Same precedent as the homepage section eyebrows.
+- "Get started" eyebrow is invented copy; the actual button label and href come from `service.finalCta`. Eyebrow is the framing wrapper, not the action.
+
+Blockers:
+- None on /services/[slug]. Pages render real content for all four AI services in both locales.
+- Adjacent: case studies still missing — `/work` and `/work/[slug]` placeholders still show approved-section list rather than real content. That's the next likely target.
+
+Verification:
+- `npm run typecheck` clean after page rewrites.
+- Independent `published`-perspective fetch confirmed each service has: positioning (en+ru), 3–4 whoItsFor items, 5 whatsIncluded items, finalCta with label + href + primary variant.
+- The pages will resolve at: /services/ai-audit, /services/ai-agents, /services/ai-content-engine, /services/company-ai-brain (and the same paths under /ru/).
+
+Next step:
+- /work + /work/[slug] are the next obvious gap. Currently rendering a SectionStack of approved section labels (placeholder list), not real data. Two avenues, depending on priority:
+  a. Author 1–2 case studies in Sanity (via a new seed-case-studies.mjs or by hand) and rewrite the case-study pages to render them. Unlocks HomeSelectedWork on the home page.
+  b. Skip case studies for now and ship the rest of the static pages (/about especially) with real AI-first copy.
+- /blog → /insights route migration still pending after either of the above.
 
 ### 2026-05-07 — Home page seeded with AI-first content
 
