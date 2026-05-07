@@ -21,10 +21,51 @@ legal, `/ru/...` mirror. Технический стек и Sanity schema-кар
 ## Current Status
 
 - Branch: `hero-layout-polish` (PR [#1](https://github.com/Raul9535/firfarov/pull/1) → `main`).
-- Last verified: 2026-05-07 — `npm run typecheck` clean. 8 home sections: Hero, Positioning, SelectedWork, ServicesOverview, UseCases (new), Approach, LatestThinking, FinalCTA. FounderMoment больше не рендерится на `/`, но файл сохранён.
-- Main blocker: `homePage` singleton всё ещё пустой (ни одного из полей не заполнено); `/blog → /insights` route migration ещё впереди.
+- Last verified: 2026-05-07 — `homePage` singleton наполнен AI-first контентом (heroHeading, heroLead, heroCta, positioningStatement, servicesOverviewIntro, 4 approachItems, 4 useCases, finalCta). selectedWork сброшен к `[]` (нет реальных кейсов). 7 из 8 home-секций теперь рендерят реальный AI-first контент; HomeSelectedWork корректно скрывается до появления кейсов.
+- Main blocker: `/blog → /insights` route migration ещё впереди; brand fonts не подключены; case studies в Sanity не созданы.
 
 ## Daily Log
+
+### 2026-05-07 — Home page seeded with AI-first content
+
+Goal:
+- Populate the `homePage` singleton with AI-implementation-studio copy via an idempotent seed script. After this, the homepage should render real content end-to-end without anyone touching Sanity Studio by hand.
+
+Done:
+- Created `scripts/seed-home-page.mjs`. Pattern: `client.transaction().createIfNotExists({_id: "homePage", _type: "homePage"}).patch("homePage", p => p.set({...})).commit()`. This is non-destructive — only fields named in `set` are written; SEO and any future editor-managed fields stay untouched. `createIfNotExists` makes the patch safe on first run.
+- Tiny inline constructors (`lt(en, ru)`, `cta(...)`, `ref(id)`) keep the content block readable. Stable `_key` strings (`audit-first`, `tool-agnostic`, `sales`, `operations`, etc.) so re-runs don't fight Studio edits.
+- Seeded fields:
+  - `heroHeading` — "We build the AI that runs your sales, support, and ops." / RU equivalent.
+  - `heroLead` — full positioning paragraph (EN+RU): "FIRFAROV is an AI implementation studio for SMB. We design and ship the agents, automations, content systems, and internal helpers …".
+  - `heroCta` — `{ label: "Book an AI audit" / "Заказать AI-аудит", href: "/contact", variant: "primary" }`.
+  - `positioningStatement` — "We build the AI systems that help small and mid-sized companies run faster, sell better, and stop drowning in manual work." / RU.
+  - `servicesOverviewIntro` — "Four offerings, one through-line — replace manual repetition with AI that runs by itself." / RU.
+  - `approachItems` — 4 principles: Audit before build · Tool-stack agnostic · Operator-friendly handover · Weeks, not quarters. Each EN+RU heading + description.
+  - `useCases` — 4 cards each with `heading` + `description` + `service` reference: Sales → service-ai-agents · Operations → service-ai-agents · Marketing → service-ai-content-engine · Knowledge → service-company-ai-brain.
+  - `finalCta` — "Start with a 30-min AI audit" / "Начните с 30-минутного AI-аудита", `/contact`, primary.
+  - `selectedWork: []` — explicitly cleared. A leftover broken ref from earlier experiments was producing `selectedWork.length === 1` with deref→null, which would render an empty card grid under the section header; HomeSelectedWork now correctly returns null.
+- Ran the script. First pass also wrote selectedWork = []. Verified.
+
+Changed files:
+- `scripts/seed-home-page.mjs` — new.
+- `PROJECT_PROGRESS.md` — current status updated; this entry appended.
+
+Decisions:
+- `createIfNotExists` + `patch.set` over `createOrReplace`. Non-destructive — preserves any field the editor adds via Studio that the seed doesn't name (already paid off: `seo` was present from a prior session and survived the seed).
+- `selectedWork: []` in the seed. Leftover stale refs from experiments needed clearing; the user's explicit instruction was to keep it empty until real cases exist. When real case studies are created, replace this line with refs (or remove it — both work).
+- `approachItems` and `useCases` `_key`s are semantic (`audit-first`, `sales`, `marketing`, …) rather than random. Stable across re-runs; if an editor reorders or edits in Studio, re-running the seed still targets the same items by key.
+- Russian copy uses Latin "AI" prefix (matches the title convention chosen for services). "Leverage" rendered as "результат / рычаг" depending on context — pragmatic, not literal.
+
+Blockers:
+- None on the homepage layer. All visible sections except SelectedWork now have real content.
+- HomeSelectedWork still hidden until at least one case study is published. That's a separate seed (or hand-authored content) effort.
+
+Verification:
+- Independent verify-fetch through `published` perspective: 9 fields confirmed (`heroHeading`, `heroLead`, `heroCta`, `positioningStatement`, `servicesOverviewIntro`, 4-item `approachItems`, 4-item `useCases`, `finalCta`, `selectedWork: []`). `seo` left intact.
+- `homeUseCasesQuery` deref'd correctly: each use case card has `service.slugEn` set ("ai-agents", "ai-content-engine", "company-ai-brain"), matching what HomeUseCases expects to build the link.
+
+Next step:
+- `/blog → /insights` route migration. Rename `app/(site)/blog/` and `app/(site)/ru/blog/` to `insights/`, drop the unused `category/[slug]` folder, update the link target inside `HomeLatestThinking` from `/blog/${slug}` to `/insights/${slug}`. Optionally rename the component to `HomeInsights` for symmetry with the URL — it's a polish, not a block. After that the new sitemap is fully reflected in the routes.
 
 ### 2026-05-07 — HomeUseCases live, homepage composition updated
 
