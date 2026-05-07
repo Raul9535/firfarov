@@ -11,21 +11,64 @@ broke, how it was verified.
 
 ## Current Goal
 
-Добить сайт максимально близко к публикации: hero, positioning, CTA,
-first cases, build readiness.
+Перестроить сайт под AI implementation studio for SMB. Обновлённый MVP
+sitemap: `/`, `/about`, `/services` + 4 AI-сервиса (`ai-audit`,
+`ai-agents`, `ai-content-engine`, `company-ai-brain`), `/work` + `/work/[slug]`,
+`/insights` + `/insights/[slug]` (вместо `/blog`), `/contact`, `/thank-you`,
+legal, `/ru/...` mirror. Технический стек и Sanity schema-каркас остаются;
+меняется content + одна home-секция (HomeUseCases вместо HomeFounderMoment).
 
 ## Current Status
 
 - Branch: `hero-layout-polish` (PR [#1](https://github.com/Raul9535/firfarov/pull/1) → `main`).
-- Last verified: 2026-05-07 — `npm run typecheck` clean, `npm run build` green, all 8 home sections render.
-- Main blocker: Home page singleton + at least one case study not yet authored in Sanity. Brand fonts not wired.
+- Last verified: 2026-05-07 — 4 AI services seeded; published-perspective fetch видит все 4 в правильном порядке.
+- Main blocker: `homePage` singleton всё ещё пустой; `homePage.useCases[]` field ещё не заведён в schema; `/blog → /insights` route migration ещё впереди.
 
 ## Daily Log
 
-### 2026-05-07
+### 2026-05-07 — AI-first pivot, services reset
 
 Goal:
-- Focused work day on FIRFAROV. Convert all remaining home-section placeholders to real data-driven sections, unblock services routing, get the page visually presentable end-to-end.
+- Replace the old design-studio service lineup with the new AI-implementation offering. Reset `service` documents in Sanity to the four canonical AI services. No code changes elsewhere yet — strategic content shift first, frontend follows.
+
+Done:
+- Rewrote `scripts/seed-services.mjs`. Now first deletes the legacy design-era docs (`service-ui-ux-design`, `service-ai-for-business`), then creates four AI services via `createOrReplace` with stable `_id`s. Idempotent on both delete (404 / "doesn't exist" treated as desired absent state) and replace.
+- Ran the script. Both legacy services removed. Four new services published:
+  - `service-ai-audit` — slug `ai-audit` (EN+RU), order 10
+  - `service-ai-agents` — slug `ai-agents` (EN+RU), order 20
+  - `service-ai-content-engine` — slug `ai-content-engine` (EN+RU), order 30
+  - `service-company-ai-brain` — slug `company-ai-brain` (EN+RU), order 40
+- Slug strategy: identical Latin slug for both EN and RU — these are international tech terms; same path simplifies sharing, SEO, recall. Schema still permits divergence later if a different RU slug is ever desired.
+- First-pass taglines (EN + RU) drafted for each service; flagged in the script as defaults to refine in Studio once final positioning copy lands.
+- Verified via published-perspective fetch on the same query `HomeServicesOverview` and `/services` index use (`allServicesQuery` shape): all four come back in correct order, with title + tagline in both locales.
+
+Changed files:
+- `scripts/seed-services.mjs` — full rewrite for the new AI lineup.
+- `PROJECT_PROGRESS.md` — current goal updated to AI implementation studio framing; current status updated; this entry appended.
+
+Decisions:
+- New positioning is `AI implementation studio for SMB`. Sitemap: 4 services (not 5 as originally planned), `/insights` instead of `/blog`, no founder-moment on home, new `HomeUseCases` section to be added.
+- Slug naming convention for AI services: same Latin slug across EN and RU. Old design services used different RU transliterations (`ui-ux-dizayn`, `ii-dlya-biznesa`); for AI/tech vocabulary the international form is cleaner.
+- Service `_id`s stable per service slug (`service-<slug>`). Re-running the script is safe — `createOrReplace` overwrites in place.
+- RU title convention: Latin "AI" prefix, not Cyrillic "ИИ". The new positioning uses "AI" everywhere; matches international tech vocabulary read in Latin form by Russian audiences.
+
+Blockers:
+- `homePage` singleton still empty in Sanity. Hero / positioning / approach / final CTA on `/` will stay empty until populated.
+- `homePage.useCases[]` schema field doesn't exist yet — needed before `HomeUseCases` component can render anything.
+- Frontend still routes `/blog`, not `/insights` — sitemap migration not yet started.
+
+Verification:
+- `node scripts/seed-services.mjs` clean: 2 legacy deletes succeed, 4 new createOrReplace succeed.
+- Independent verify-fetch through `published` perspective returns all 4 services with `tagline` + `title` in EN+RU and correct `order` (10/20/30/40).
+- No unmerged old service IDs left — checked grep on the dataset via the same query.
+
+Next step:
+- Add `useCases[]` array field to `homePage` schema in `sanity/schemas/documents/homePage.ts`. Same shape as `approachItems[]` (object array with `heading: localizedText`, `description: localizedText`, plus optional `service: reference` to link a use case to a profile). Max 6 items. Inner required only on heading + description.
+- Regenerate types (`npm run sanity:types`).
+- Re-export `HomePageQueryResult` is unchanged at the type-level (it's still derived from the same `homePageQuery`), but the new `useCases` field will appear in the generated type automatically.
+- Then implement `components/sections/home/UseCases.tsx` and wire into `app/(site)/page.tsx` + `/ru/page.tsx` after `HomeServicesOverview`, removing `HomeFounderMoment` from the page composition (keep the file — it'll move to `/about` later).
+
+### 2026-05-07 — All 8 home sections shipped + Tailwind/token bug fixes
 
 Done:
 - Implemented the four remaining home sections as real async Server Components: `HomeSelectedWork`, `HomeServicesOverview`, `HomeFounderMoment`, `HomeApproach`, `HomeFinalCTA`, `HomeLatestThinking`. All eight home sections are now data-driven; no `SectionPlaceholder` references remain in `components/sections/home/`.

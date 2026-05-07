@@ -1,14 +1,23 @@
-// One-shot seed for the MVP services collection.
-// Reads Sanity creds from .env.local, then publishes (createOrReplace) two service documents
-// directly. Idempotent — running it twice produces the same dataset state.
+// AI-first services seed.
+//
+// Reflects the new positioning: FIRFAROV is an AI implementation studio for SMBs.
+// Four offerings — AI Audit, AI Agents, AI Content Engine, Company AI Brain —
+// replace the prior design-studio service set.
+//
+// What this script does, in order:
+//   1. Deletes the legacy design-era service docs (`service-ui-ux-design`,
+//      `service-ai-for-business`) so they no longer surface anywhere.
+//   2. Creates / replaces four AI service docs by stable `_id`. No `drafts.`
+//      prefix — they are published immediately.
+//
+// Idempotent on both sides — re-running produces the same dataset state. Safe
+// to run after editing taglines / order / titles in this file.
 //
 // Run from project root:
 //   node scripts/seed-services.mjs
 //
 // Reads SANITY_API_WRITE_TOKEN (preferred) or falls back to SANITY_API_READ_TOKEN.
-// The chosen token must have Editor-or-higher role to create documents.
-// If only Viewer permission is granted, the script prints a permission error with a link to
-// the tokens page so a new Editor token can be generated.
+// The chosen token must have Editor-or-higher role to create / delete documents.
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -62,56 +71,132 @@ const client = createClient({
   useCdn: false,
 });
 
-// Stable, predictable IDs — using `_id` without a `drafts.` prefix publishes directly.
-// Slugs match what the frontend's localizePath('/services/<slug>', locale) expects.
+// Legacy IDs from the design-era seed. Removed before seeding the AI lineup.
+const LEGACY_SERVICE_IDS = [
+  "service-ui-ux-design",
+  "service-ai-for-business",
+];
+
+// New AI services. Slugs are intentionally identical across EN and RU — the
+// terms ("ai-audit", "ai-agents", etc.) are international tech vocabulary;
+// keeping a single slug simplifies sharing, SEO, and recall. The bilingual
+// schema still allows them to diverge later if a different RU slug is desired.
+//
+// Taglines below are first-pass defaults: each is a one-line outcome promise.
+// Edit in Studio (or here + re-run) once final positioning copy lands.
 const services = [
   {
-    _id: "service-ui-ux-design",
+    _id: "service-ai-audit",
     _type: "service",
     title: {
       _type: "localizedText",
-      en: "UI/UX Design",
-      ru: "UI/UX Дизайн",
+      en: "AI Audit",
+      ru: "AI-аудит",
     },
-    slugEn: { _type: "slug", current: "ui-ux-design" },
-    slugRu: { _type: "slug", current: "ui-ux-dizayn" },
+    slugEn: { _type: "slug", current: "ai-audit" },
+    slugRu: { _type: "slug", current: "ai-audit" },
     tagline: {
       _type: "localizedText",
-      en: "Interfaces users actually understand.",
-      ru: "Интерфейсы, в которых пользователь не теряется.",
+      en: "Map where AI actually fits — before you build anything.",
+      ru: "Карта, где AI реально работает в вашем бизнесе — до любого внедрения.",
     },
     order: 10,
   },
   {
-    _id: "service-ai-for-business",
+    _id: "service-ai-agents",
     _type: "service",
     title: {
       _type: "localizedText",
-      en: "AI for Business",
-      ru: "ИИ для бизнеса",
+      en: "AI Agents",
+      ru: "AI-агенты",
     },
-    slugEn: { _type: "slug", current: "ai-for-business" },
-    slugRu: { _type: "slug", current: "ii-dlya-biznesa" },
+    slugEn: { _type: "slug", current: "ai-agents" },
+    slugRu: { _type: "slug", current: "ai-agents" },
     tagline: {
       _type: "localizedText",
-      en: "AI embedded where it actually matters.",
-      ru: "ИИ, встроенный туда, где он реально приносит пользу.",
+      en: "Custom agents that close tickets, qualify leads, and run workflows.",
+      ru: "Кастомные агенты, которые закрывают тикеты, квалифицируют лиды и ведут процессы.",
     },
     order: 20,
+  },
+  {
+    _id: "service-ai-content-engine",
+    _type: "service",
+    title: {
+      _type: "localizedText",
+      en: "AI Content Engine",
+      ru: "AI-движок контента",
+    },
+    slugEn: { _type: "slug", current: "ai-content-engine" },
+    slugRu: { _type: "slug", current: "ai-content-engine" },
+    tagline: {
+      _type: "localizedText",
+      en: "Content systems that ship daily output without scaling the team.",
+      ru: "Контент-системы, которые ежедневно работают без расширения команды.",
+    },
+    order: 30,
+  },
+  {
+    _id: "service-company-ai-brain",
+    _type: "service",
+    title: {
+      _type: "localizedText",
+      en: "Company AI Brain",
+      ru: "AI-мозг компании",
+    },
+    slugEn: { _type: "slug", current: "company-ai-brain" },
+    slugRu: { _type: "slug", current: "company-ai-brain" },
+    tagline: {
+      _type: "localizedText",
+      en: "An internal assistant that knows your docs, Slack, CRM, and stack.",
+      ru: "Внутренний AI-помощник, который знает ваши документы, Slack, CRM и стек.",
+    },
+    order: 40,
   },
 ];
 
 console.log(`→ project: ${projectId} · dataset: ${dataset} · apiVersion: ${apiVersion}`);
-console.log(`→ token from: ${tokenSource}`);
-console.log(`→ seeding ${services.length} service document(s)...\n`);
+console.log(`→ token from: ${tokenSource}\n`);
 
+console.log(`→ removing ${LEGACY_SERVICE_IDS.length} legacy service doc(s)...`);
+for (const id of LEGACY_SERVICE_IDS) {
+  try {
+    await client.delete(id);
+    console.log(`✓ deleted ${id}`);
+  } catch (err) {
+    const msg = err?.message ?? String(err);
+    // Sanity returns 404 / "doesn't exist" when the doc is already gone — that
+    // is the desired idempotent state, not an error.
+    if (
+      err?.statusCode === 404 ||
+      msg.includes("not found") ||
+      msg.includes("does not exist")
+    ) {
+      console.log(`· ${id} already absent`);
+      continue;
+    }
+    console.error(`✗ ${id} delete failed: ${msg}`);
+    if (err?.statusCode === 401 || err?.statusCode === 403) {
+      console.error(`\nToken (${tokenSource}) does not have write permission.`);
+      console.error(
+        `Create a new token with Editor role at https://www.sanity.io/manage/personal/project/${projectId}/api → Tokens,`,
+      );
+      console.error("then add it to .env.local as:");
+      console.error("  SANITY_API_WRITE_TOKEN=sk...");
+    }
+    process.exit(1);
+  }
+}
+
+console.log(`\n→ seeding ${services.length} AI service document(s)...\n`);
 for (const doc of services) {
   try {
     const result = await client.createOrReplace(doc);
     console.log(`✓ ${doc._id}`);
     console.log(`  _id:  ${result._id}`);
     console.log(`  _rev: ${result._rev}`);
-    console.log(`  title.en: ${result.title?.en}\n`);
+    console.log(`  title.en: ${result.title?.en}`);
+    console.log(`  slugEn:   ${result.slugEn?.current}\n`);
   } catch (err) {
     console.error(`✗ ${doc._id} failed:`);
     console.error(`  ${err?.message ?? err}`);
