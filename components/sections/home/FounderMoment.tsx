@@ -13,12 +13,12 @@ type HomeFounderMomentProps = {
  * off the same homePage document Hero / Positioning / ServicesOverview already fetch —
  * React's request-level cache dedupes, no additional HTTP call.
  *
- * Layout: single column. Modest serif heading sits above a comfortable body paragraph.
- * Heading is intentionally smaller than the hero / positioning displays — this is a beat
- * inside the page, not a brand statement.
+ * Layout: same 4|8 editorial spine the rest of the page uses. Mono section label sits
+ * in the left column (col-span-4); heading + body sit in the right column (col-span-8).
+ * On mobile the grid collapses and label stacks above content.
  *
- * Returns `null` if both fields are empty so an unfilled homePage doesn't bleed an empty
- * bordered shell into the layout.
+ * Returns `null` when both fields are empty so an unfilled homePage doesn't bleed an
+ * empty bordered shell into the layout.
  */
 export async function HomeFounderMoment({ locale }: HomeFounderMomentProps) {
   const home = await sanityFetch(homePageQuery);
@@ -28,25 +28,34 @@ export async function HomeFounderMoment({ locale }: HomeFounderMomentProps) {
 
   if (!heading && !text) return null;
 
+  const sectionLabel = locale === "ru" ? "Основатель" : "Founder";
+
   return (
     <section
       aria-labelledby={heading ? "home-founder-moment-heading" : undefined}
       className="border-b border-rule"
     >
-      <Container className="py-20 md:py-28">
-        {heading ? (
-          <h2
-            id="home-founder-moment-heading"
-            className="max-w-3xl font-serif text-2xl text-ink md:text-3xl lg:text-4xl"
-          >
-            {heading}
-          </h2>
-        ) : null}
-        {text ? (
-          <p className="mt-6 max-w-3xl text-lg leading-relaxed text-ink-muted md:mt-8 md:text-xl">
-            {text}
+      <Container className="py-24 md:py-32">
+        <div className="md:grid md:grid-cols-12 md:items-baseline md:gap-8">
+          <p className="font-mono text-xs uppercase tracking-widest text-ink-muted md:col-span-4 md:pt-3">
+            {sectionLabel}
           </p>
-        ) : null}
+          <div className="mt-4 md:col-span-8 md:mt-0">
+            {heading ? (
+              <h2
+                id="home-founder-moment-heading"
+                className="font-serif text-2xl tracking-tight text-ink md:text-3xl lg:text-4xl"
+              >
+                {heading}
+              </h2>
+            ) : null}
+            {text ? (
+              <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-muted md:mt-8 md:text-xl">
+                {text}
+              </p>
+            ) : null}
+          </div>
+        </div>
       </Container>
     </section>
   );
