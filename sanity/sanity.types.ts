@@ -1235,6 +1235,18 @@ export type HomeSelectedWorkQueryResult = Array<{
   publishedAt: string | null;
   heroImage: MediaAsset | null;
 }> | null;
+// Variable: homeUseCasesQuery
+// Query: *[_type == "homePage"][0].useCases[]{    _key,    heading,    description,    service->{      _id,      "slugEn": slugEn.current,      "slugRu": slugRu.current    }  }
+export type HomeUseCasesQueryResult = Array<{
+  _key: string;
+  heading: LocalizedText | null;
+  description: LocalizedText | null;
+  service: {
+    _id: string;
+    slugEn: string | null;
+    slugRu: string | null;
+  } | null;
+}> | null;
 // Variable: serviceBySlugQuery
 // Query: *[_type == "service" && (    ($locale == "en" && slugEn.current == $slug) ||    ($locale == "ru" && slugRu.current == $slug)  )][0]
 export type ServiceBySlugQueryResult = {
@@ -1977,6 +1989,7 @@ declare module "@sanity/client" {
     '*[_type == "blogIndexPage"][0]': BlogIndexPageQueryResult;
     '*[_type == "thankYouPage"][0]': ThankYouPageQueryResult;
     '\n  *[_type == "homePage"][0].selectedWork[]->{\n    _id,\n    title,\n    client,\n    summary,\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current,\n    publishedAt,\n    heroImage\n  }\n': HomeSelectedWorkQueryResult;
+    '\n  *[_type == "homePage"][0].useCases[]{\n    _key,\n    heading,\n    description,\n    service->{\n      _id,\n      "slugEn": slugEn.current,\n      "slugRu": slugRu.current\n    }\n  }\n': HomeUseCasesQueryResult;
     '\n  *[_type == "service" && (\n    ($locale == "en" && slugEn.current == $slug) ||\n    ($locale == "ru" && slugRu.current == $slug)\n  )][0]\n': ServiceBySlugQueryResult;
     '\n  *[_type == "service"] | order(order asc) {\n    _id,\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current,\n    title,\n    tagline,\n    order\n  }\n': AllServicesQueryResult;
     '\n  *[_type == "caseStudy" && (\n    ($locale == "en" && slugEn.current == $slug) ||\n    ($locale == "ru" && slugRu.current == $slug)\n  )][0]\n': CaseStudyBySlugQueryResult;

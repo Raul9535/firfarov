@@ -43,6 +43,23 @@ export const homeSelectedWorkQuery = defineQuery(`
   }
 `);
 
+// HomePage use cases — projects each useCase with the linked service derefed inline
+// so the section can build a /services/[slug] link without a second roundtrip.
+// `service` may be null (the link is optional in the schema), in which case the card
+// renders without an arrow / link.
+export const homeUseCasesQuery = defineQuery(`
+  *[_type == "homePage"][0].useCases[]{
+    _key,
+    heading,
+    description,
+    service->{
+      _id,
+      "slugEn": slugEn.current,
+      "slugRu": slugRu.current
+    }
+  }
+`);
+
 // ─── Services ──────────────────────────────────────────────────
 export const serviceBySlugQuery = defineQuery(`
   *[_type == "service" && (

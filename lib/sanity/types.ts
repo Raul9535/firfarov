@@ -51,6 +51,7 @@ export type {
   GlobalSettingsQueryResult,
   HomePageQueryResult,
   HomeSelectedWorkQueryResult,
+  HomeUseCasesQueryResult,
   LatestBlogPostsQueryResult,
   LatestCaseStudiesQueryResult,
   LegalPageBySlugQueryResult,

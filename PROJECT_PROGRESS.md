@@ -21,10 +21,50 @@ legal, `/ru/...` mirror. Технический стек и Sanity schema-кар
 ## Current Status
 
 - Branch: `hero-layout-polish` (PR [#1](https://github.com/Raul9535/firfarov/pull/1) → `main`).
-- Last verified: 2026-05-07 — 4 AI services seeded; published-perspective fetch видит все 4 в правильном порядке.
-- Main blocker: `homePage` singleton всё ещё пустой; `homePage.useCases[]` field ещё не заведён в schema; `/blog → /insights` route migration ещё впереди.
+- Last verified: 2026-05-07 — `npm run typecheck` clean. 8 home sections: Hero, Positioning, SelectedWork, ServicesOverview, UseCases (new), Approach, LatestThinking, FinalCTA. FounderMoment больше не рендерится на `/`, но файл сохранён.
+- Main blocker: `homePage` singleton всё ещё пустой (ни одного из полей не заполнено); `/blog → /insights` route migration ещё впереди.
 
 ## Daily Log
+
+### 2026-05-07 — HomeUseCases live, homepage composition updated
+
+Goal:
+- Wire the new `HomeUseCases` section end-to-end. Drop `HomeFounderMoment` from the homepage composition (file kept, will move to `/about` later). Page composition shifts from "design-studio with founder note" to "AI-first with concrete use cases".
+
+Done:
+- Added `homeUseCasesQuery` to `lib/sanity/queries.ts`. Projects each `useCases[]` item with the optional `service` reference dereffed inline (`service->{ _id, slugEn.current, slugRu.current }`). Same pattern as `homeSelectedWorkQuery` — section gets ready-to-use slugs without a second roundtrip. Returns `Array<{...}> | null`.
+- Regenerated typegen (29 schema types + **21** GROQ queries). New `HomeUseCasesQueryResult` re-exported from `lib/sanity/types.ts`.
+- Created `components/sections/home/UseCases.tsx`. Async Server Component, follows the established 4|8 spine pattern (mono "Use cases" / "Сценарии" eyebrow LEFT, serif h2 "Where AI actually fits" / "Где AI реально работает" RIGHT). Cards in a 2-column grid below at full width. Cards with `service` reference render as `<Link>` to `/services/[slug]` with hover states + trailing arrow; cards without render as plain `<div>` (no arrow, no hover).
+- Updated `app/(site)/page.tsx` and `app/(site)/ru/page.tsx`:
+  - Removed `HomeFounderMoment` import + JSX usage.
+  - Added `HomeUseCases` import + JSX usage right after `HomeServicesOverview`.
+  - File `components/sections/home/FounderMoment.tsx` kept untouched — will migrate to `/about` page later.
+- Section count on home stays at 8: Hero / Positioning / SelectedWork / ServicesOverview / **UseCases** / Approach / LatestThinking / FinalCTA.
+
+Changed files:
+- `lib/sanity/queries.ts` — new `homeUseCasesQuery`.
+- `lib/sanity/types.ts` — re-export `HomeUseCasesQueryResult`.
+- `sanity/sanity.types.ts` — regenerated.
+- `components/sections/home/UseCases.tsx` — new section component.
+- `app/(site)/page.tsx`, `app/(site)/ru/page.tsx` — composition update (FounderMoment out, UseCases in).
+
+Decisions:
+- Optional service link in each use-case card: schema makes the reference optional, so cards mix linked and unlinked. Differentiation is subtle — only the linked variants get the trailing arrow + heading hover. Avoided forcing every card to link.
+- Dedicated `homeUseCasesQuery` instead of expanding `homePageQuery` with a useCases projection. Same architectural choice as `homeSelectedWorkQuery` — per-section deref queries keep section logic isolated; React still dedups identical queries across sibling sections.
+- `HomeFounderMoment` file kept rather than deleted. The component stays available for the `/about` page to reuse later, and removing the file would have been destructive without payoff.
+
+Blockers:
+- `homePage.useCases[]` is empty in Sanity. Section returns `null` until at least one item is authored.
+- Same prior blockers: rest of `homePage` singleton fields, no case studies, no brand fonts, `/blog → /insights` migration pending.
+
+Verification:
+- `npm run sanity:types` clean — `HomeUseCasesQueryResult` shape correct (`Array<{ _key, heading, description, service? } | null>`).
+- `npm run typecheck` — clean across all changes.
+- Grep confirms no `HomeFounderMoment` references remain in either home page; the file at `components/sections/home/FounderMoment.tsx` is intact.
+
+Next step:
+- Author 4 use-case items in `homePage.useCases[]` via Sanity Studio (or via a dedicated `seed-home-page.mjs` script if more efficient). Suggested 4 cards: Sales (→ AI Agents), Operations (→ AI Agents or AI Audit), Marketing (→ AI Content Engine), Knowledge (→ Company AI Brain). Each with heading + description + service reference.
+- After that the next code step is `/blog → /insights` route migration: rename `app/(site)/blog/` and `app/(site)/ru/blog/` to `insights/`, update `HomeLatestThinking` link target (and optionally rename the component to `HomeInsights` for consistency with the URL).
 
 ### 2026-05-07 — AI-first pivot, services reset
 
