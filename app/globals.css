@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Explicit source paths — Tailwind v4 normally auto-detects from the project root, but
+   we declare every directory that contains class names so detection is deterministic
+   across HMR cycles, route groups, and glob edge cases. Paths are relative to this file. */
+@source "../app/**/*.{ts,tsx}";
+@source "../components/**/*.{ts,tsx}";
+@source "../config/**/*.{ts,tsx}";
+@source "../lib/**/*.{ts,tsx}";
+
 @import "../styles/fonts.css";
 @import "../styles/tokens.css";
 

@@ -50,6 +50,7 @@ export type {
   ContactPageQueryResult,
   GlobalSettingsQueryResult,
   HomePageQueryResult,
+  HomeSelectedWorkQueryResult,
   LatestBlogPostsQueryResult,
   LatestCaseStudiesQueryResult,
   LegalPageBySlugQueryResult,

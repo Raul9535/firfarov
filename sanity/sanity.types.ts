@@ -1201,6 +1201,18 @@ export type ThankYouPageQueryResult = {
   }>;
   seo?: SeoMetadata;
 } | null;
+// Variable: homeSelectedWorkQuery
+// Query: *[_type == "homePage"][0].selectedWork[]->{    _id,    title,    client,    summary,    "slugEn": slugEn.current,    "slugRu": slugRu.current,    publishedAt,    heroImage  }
+export type HomeSelectedWorkQueryResult = Array<{
+  _id: string;
+  title: LocalizedText | null;
+  client: LocalizedText | null;
+  summary: LocalizedText | null;
+  slugEn: string | null;
+  slugRu: string | null;
+  publishedAt: string | null;
+  heroImage: MediaAsset | null;
+}> | null;
 // Variable: serviceBySlugQuery
 // Query: *[_type == "service" && (    ($locale == "en" && slugEn.current == $slug) ||    ($locale == "ru" && slugRu.current == $slug)  )][0]
 export type ServiceBySlugQueryResult = {
@@ -1261,12 +1273,13 @@ export type ServiceBySlugQueryResult = {
   seo?: SeoMetadata;
 } | null;
 // Variable: allServicesQuery
-// Query: *[_type == "service"] | order(order asc) {    _id,    "slugEn": slugEn.current,    "slugRu": slugRu.current,    title,    order  }
+// Query: *[_type == "service"] | order(order asc) {    _id,    "slugEn": slugEn.current,    "slugRu": slugRu.current,    title,    tagline,    order  }
 export type AllServicesQueryResult = Array<{
   _id: string;
   slugEn: string | null;
   slugRu: string | null;
   title: LocalizedText | null;
+  tagline: LocalizedText | null;
   order: number | null;
 }>;
 // Variable: caseStudyBySlugQuery
@@ -1941,8 +1954,9 @@ declare module "@sanity/client" {
     '*[_type == "workIndexPage"][0]': WorkIndexPageQueryResult;
     '*[_type == "blogIndexPage"][0]': BlogIndexPageQueryResult;
     '*[_type == "thankYouPage"][0]': ThankYouPageQueryResult;
+    '\n  *[_type == "homePage"][0].selectedWork[]->{\n    _id,\n    title,\n    client,\n    summary,\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current,\n    publishedAt,\n    heroImage\n  }\n': HomeSelectedWorkQueryResult;
     '\n  *[_type == "service" && (\n    ($locale == "en" && slugEn.current == $slug) ||\n    ($locale == "ru" && slugRu.current == $slug)\n  )][0]\n': ServiceBySlugQueryResult;
-    '\n  *[_type == "service"] | order(order asc) {\n    _id,\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current,\n    title,\n    order\n  }\n': AllServicesQueryResult;
+    '\n  *[_type == "service"] | order(order asc) {\n    _id,\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current,\n    title,\n    tagline,\n    order\n  }\n': AllServicesQueryResult;
     '\n  *[_type == "caseStudy" && (\n    ($locale == "en" && slugEn.current == $slug) ||\n    ($locale == "ru" && slugRu.current == $slug)\n  )][0]\n': CaseStudyBySlugQueryResult;
     '\n  *[_type == "caseStudy" && defined(slugEn.current) && defined(slugRu.current)] {\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current\n  }\n': AllCaseStudySlugsQueryResult;
     '\n  *[_type == "caseStudy"] | order(publishedAt desc) [0...$limit]\n': LatestCaseStudiesQueryResult;

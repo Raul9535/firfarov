@@ -28,6 +28,21 @@ export const workIndexPageQuery = defineQuery(`*[_type == "workIndexPage"][0]`);
 export const blogIndexPageQuery = defineQuery(`*[_type == "blogIndexPage"][0]`);
 export const thankYouPageQuery = defineQuery(`*[_type == "thankYouPage"][0]`);
 
+// HomePage selected work — dereffed in-query so the section gets typed case studies
+// instead of bare references. Returns null if homePage doesn't exist or selectedWork is empty.
+export const homeSelectedWorkQuery = defineQuery(`
+  *[_type == "homePage"][0].selectedWork[]->{
+    _id,
+    title,
+    client,
+    summary,
+    "slugEn": slugEn.current,
+    "slugRu": slugRu.current,
+    publishedAt,
+    heroImage
+  }
+`);
+
 // ─── Services ──────────────────────────────────────────────────
 export const serviceBySlugQuery = defineQuery(`
   *[_type == "service" && (
@@ -42,6 +57,7 @@ export const allServicesQuery = defineQuery(`
     "slugEn": slugEn.current,
     "slugRu": slugRu.current,
     title,
+    tagline,
     order
   }
 `);

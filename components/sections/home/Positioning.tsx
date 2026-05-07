@@ -9,13 +9,15 @@ type HomePositioningProps = {
 };
 
 /**
- * Second real home section. Reads the `positioningStatement` field off the same `homePage`
- * document HomeHero uses — React's request-level cache dedupes the `sanityFetch(homePageQuery)`
- * call, so no duplicate HTTP request is made within a single render.
+ * Positioning statement on the homepage. Establishes the 4|8 editorial grid that the rest
+ * of the post-hero sections follow:
+ *   - Mono section label sits in the left column (col-span-4) — small, uppercase, muted.
+ *   - The statement sits in the right column (col-span-8) at display-serif scale.
  *
- * The statement is rendered as a calm editorial block: serif type, generous vertical rhythm,
- * no decorative chrome. If the field is empty, the whole section is skipped (returns null)
- * rather than showing a placeholder — matches the brand's "calm, not flashy" direction.
+ * On mobile the grid collapses; label stacks above statement.
+ *
+ * Reads `homePage.positioningStatement` off the same homePageQuery the other sections use —
+ * React's request-level cache dedupes, no additional HTTP call.
  */
 export async function HomePositioning({ locale }: HomePositioningProps) {
   const home = await sanityFetch(homePageQuery, { tags: ["homePage"] });
@@ -23,15 +25,22 @@ export async function HomePositioning({ locale }: HomePositioningProps) {
 
   if (!statement) return null;
 
+  const label = locale === "ru" ? "Позиционирование" : "Positioning";
+
   return (
     <section aria-labelledby="home-positioning-heading" className="border-b border-rule">
-      <Container className="py-24 md:py-40">
-        <h2
-          id="home-positioning-heading"
-          className="max-w-4xl font-serif text-3xl leading-[1.15] text-ink md:text-5xl md:leading-[1.1]"
-        >
-          {statement}
-        </h2>
+      <Container className="py-24 md:py-32">
+        <div className="md:grid md:grid-cols-12 md:items-baseline md:gap-8">
+          <p className="font-mono text-xs uppercase tracking-widest text-ink-muted md:col-span-4 md:pt-3">
+            {label}
+          </p>
+          <h2
+            id="home-positioning-heading"
+            className="mt-6 max-w-3xl text-balance font-serif text-3xl leading-[1.1] tracking-tight text-ink md:col-span-8 md:mt-0 md:text-4xl lg:text-5xl"
+          >
+            {statement}
+          </h2>
+        </div>
       </Container>
     </section>
   );
