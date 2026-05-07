@@ -242,64 +242,6 @@ export type CaseStudy = {
   seo?: SeoMetadata;
 };
 
-export type Service = {
-  _id: string;
-  _type: "service";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  title?: LocalizedText;
-  slugEn?: Slug;
-  slugRu?: Slug;
-  order?: number;
-  tagline?: LocalizedText;
-  positioning?: LocalizedText;
-  whoItsFor?: Array<
-    {
-      _key: string;
-    } & LocalizedText
-  >;
-  whatsIncluded?: Array<
-    {
-      _key: string;
-    } & LocalizedText
-  >;
-  processSteps?: Array<{
-    heading?: LocalizedText;
-    description?: LocalizedText;
-    _key: string;
-  }>;
-  deliverables?: Array<
-    {
-      _key: string;
-    } & LocalizedText
-  >;
-  techStack?: Array<string>;
-  caseStudies?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "caseStudy";
-  }>;
-  relatedServices?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "service";
-  }>;
-  faq?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "faqItem";
-  }>;
-  finalCta?: CtaBlock;
-  seo?: SeoMetadata;
-};
-
 export type ThankYouPage = {
   _id: string;
   _type: "thankYouPage";
@@ -689,6 +631,75 @@ export type HomePage = {
     description?: LocalizedText;
     _key: string;
   }>;
+  useCases?: Array<{
+    heading?: LocalizedText;
+    description?: LocalizedText;
+    service?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "service";
+    };
+    _key: string;
+  }>;
+  finalCta?: CtaBlock;
+  seo?: SeoMetadata;
+};
+
+export type Service = {
+  _id: string;
+  _type: "service";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title?: LocalizedText;
+  slugEn?: Slug;
+  slugRu?: Slug;
+  order?: number;
+  tagline?: LocalizedText;
+  positioning?: LocalizedText;
+  whoItsFor?: Array<
+    {
+      _key: string;
+    } & LocalizedText
+  >;
+  whatsIncluded?: Array<
+    {
+      _key: string;
+    } & LocalizedText
+  >;
+  processSteps?: Array<{
+    heading?: LocalizedText;
+    description?: LocalizedText;
+    _key: string;
+  }>;
+  deliverables?: Array<
+    {
+      _key: string;
+    } & LocalizedText
+  >;
+  techStack?: Array<string>;
+  caseStudies?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "caseStudy";
+  }>;
+  relatedServices?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "service";
+  }>;
+  faq?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "faqItem";
+  }>;
   finalCta?: CtaBlock;
   seo?: SeoMetadata;
 };
@@ -872,7 +883,6 @@ export type AllSanitySchemaTypes =
   | FaqItem
   | BlogCategory
   | CaseStudy
-  | Service
   | ThankYouPage
   | BlogIndexPage
   | BlogPost
@@ -881,6 +891,7 @@ export type AllSanitySchemaTypes =
   | AboutPage
   | Author
   | HomePage
+  | Service
   | GlobalSettings
   | CtaBlock
   | SeoMetadata
@@ -942,6 +953,17 @@ export type HomePageQueryResult = {
   approachItems?: Array<{
     heading?: LocalizedText;
     description?: LocalizedText;
+    _key: string;
+  }>;
+  useCases?: Array<{
+    heading?: LocalizedText;
+    description?: LocalizedText;
+    service?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "service";
+    };
     _key: string;
   }>;
   finalCta?: CtaBlock;

@@ -105,6 +105,43 @@ export const homePage = defineType({
       validation: (rule) => rule.max(6),
     }),
     defineField({
+      name: "useCases",
+      title: "Use cases",
+      type: "array",
+      group: "body",
+      description:
+        "Where AI actually fits across business functions — sales, ops, marketing, knowledge. Each card optionally links to a related service detail page.",
+      of: [
+        {
+          type: "object",
+          fields: [
+            {
+              name: "heading",
+              title: "Heading",
+              type: "localizedText",
+              validation: (rule) => rule.required(),
+            },
+            {
+              name: "description",
+              title: "Description",
+              type: "localizedText",
+              validation: (rule) => rule.required(),
+            },
+            {
+              name: "service",
+              title: "Linked service",
+              type: "reference",
+              to: [{ type: "service" }],
+              description:
+                "Optional — links the use case to one of the four service detail pages.",
+            },
+          ],
+          preview: { select: { title: "heading.en", subtitle: "description.en" } },
+        },
+      ],
+      validation: (rule) => rule.max(6),
+    }),
+    defineField({
       name: "finalCta",
       title: "Final CTA",
       type: "ctaBlock",
