@@ -21,10 +21,64 @@ legal, `/ru/...` mirror. Технический стек и Sanity schema-кар
 ## Current Status
 
 - Branch: `hero-layout-polish` (PR [#1](https://github.com/Raul9535/firfarov/pull/1) → `main`).
-- Last verified: 2026-05-07 — `npm run typecheck` clean. Главная: 7 из 8 секций с реальным AI-first контентом. Service detail (EN+RU): 5 MVP-секций (Hero / Positioning / Who it's for / What's included / Final CTA), все 4 AI-сервиса наполнены — positioning + 3-4 audience items + 5 included items + finalCta.
-- Main blocker: `/blog → /insights` route migration ещё впереди; brand fonts не подключены; case studies в Sanity не созданы.
+- Last verified: 2026-05-07 — `npm run typecheck` clean. Главная: **все 8 секций** с реальным AI-first контентом, включая HomeSelectedWork (теперь с 2 кейсами). Service detail (EN+RU): 5 MVP-секций. Work pages (EN+RU): index + detail оба data-driven; 2 case studies seeded.
+- Main blocker: `/about` всё ещё placeholder; `/blog → /insights` route migration ещё впереди; brand fonts не подключены.
 
 ## Daily Log
+
+### 2026-05-07 — Case studies / work: AI-first MVP
+
+Goal:
+- Move /work and /work/[slug] from approved-section placeholder lists to real proof-driven case-study rendering. Seed two anonymized AI implementation cases so both pages — and HomeSelectedWork on the homepage — light up immediately.
+
+Done:
+- Added `workIndexQuery` to `lib/sanity/queries.ts` — selects all case studies with both EN and RU slugs filled, ordered newest first, projected to the same shape `homeSelectedWorkQuery` uses (id, title, client, summary, slugEn/Ru, publishedAt, heroImage). Re-exported `WorkIndexQueryResult` from `lib/sanity/types.ts`. Typegen regenerated to 22 GROQ queries.
+- Rewrote `app/(site)/work/page.tsx` and the RU mirror. Hero (page-level h1 + eyebrow) + 2-column card grid. Each card mirrors `HomeSelectedWork` exactly so home and index render through the same visual language. Empty state: "No case studies have been published yet." / "Кейсы пока не опубликованы."
+- Rewrote `app/(site)/work/[slug]/page.tsx` and the RU mirror. 4-section detail composition, all in the project's 4|8 spine:
+  1. Hero — client (mono) + title (display serif) + summary (lead) + optional heroImage (16:9, full container width).
+  2. At a glance — `<dl>` of 5 label/value pairs in a 2-column sub-grid (4|8 spine, eyebrow "At a glance" / "В двух словах" LEFT, dl in col-span-8).
+  3. Outcomes — hairline-separated list of metric (display serif, text-3xl→text-5xl) + description (muted) rows.
+  4. Final CTA — eyebrow "Get started" / "Начать" + size="lg" Button driven by `caseStudy.finalCta`.
+  Each section returns null when its source field is empty. Richer Portable Text body fields (bodyEn, keyDecisions, founderNote, related services, next case) deferred — kept off the MVP surface until Portable Text rendering is in real use.
+- Created `scripts/seed-case-studies.mjs`. Two anonymized composite cases with full MVP shape:
+  - `case-ai-lead-triage-saas` — "AI lead triage cut sales follow-up time 6× at a 30-person B2B SaaS" / RU. atAGlance × 5 (Client, Industry, Stack, Timeline, Headline outcome), outcomes × 3 (12 min → 30 sec; +22% conversion; 0 missed leads), Final CTA "Start your project". Linked to services: ai-agents, ai-audit.
+  - `case-company-ai-brain-agency` — "Slack-native AI brain replaced 30 weekly knowledge questions at a 20-person agency" / RU. atAGlance × 5, outcomes × 3 (30+ → 0; <2 sec response; 5d → 1d onboarding), Final CTA. Linked to service: company-ai-brain.
+  Stable `_key`s on every array item so re-running the seed updates items in place.
+- Cleanup: discovered an orphan caseStudy doc (`b1d48b3d-...`, title "1", slugs "1"/"1") from earlier experiments that was satisfying schema validation and would have appeared as a third broken card on /work. Added an explicit `ORPHAN_CASE_STUDY_IDS` cleanup list to the seed (mirrors the pattern in seed-services.mjs). Ran the seed; orphan deleted.
+- Wired both case studies into `homePage.selectedWork` directly from the same script via `transaction().createIfNotExists("homePage").patch("homePage", p => p.set({ selectedWork: [refs] }))`. Non-destructive — only the `selectedWork` field is replaced; everything else on homePage is preserved.
+- heroImage left empty in seed across both cases. Sanity image upload via API would need either SVG (requires Next `dangerouslyAllowSVG`) or a raster encoder dependency. Pages handle missing image gracefully; cards render text-only. User uploads real case-study imagery via Studio when ready. Documented in seed script.
+
+Changed files:
+- `lib/sanity/queries.ts` — new workIndexQuery.
+- `lib/sanity/types.ts` — re-export WorkIndexQueryResult.
+- `sanity/sanity.types.ts` — regenerated.
+- `app/(site)/work/page.tsx`, `app/(site)/ru/work/page.tsx` — rewrite from placeholder to Sanity-driven index.
+- `app/(site)/work/[slug]/page.tsx`, `app/(site)/ru/work/[slug]/page.tsx` — rewrite from SectionStack to real 4-section detail.
+- `scripts/seed-case-studies.mjs` — new (also patches homePage.selectedWork).
+- `PROJECT_PROGRESS.md` — current status updated; this entry appended.
+
+Decisions:
+- Same projection shape for `workIndexQuery` and `homeSelectedWorkQuery` (deref'd or selected fields are identical). The two render through `HomeSelectedWork` and `/work` cards, which use the same field reads. Trade-off: small duplication in queries; benefit: each section explicit about its data needs, no shared-cache surprise.
+- Two anonymized composite cases instead of one. Two cards in a 2-col grid look intentional; one looks unfinished. The cases are clearly composite and will be replaced when a real engagement is ready to publish.
+- Case-study detail MVP stops at 4 sections (Hero, At a glance, Outcomes, Final CTA). The schema has more (bodyEn/Ru Portable Text, keyDecisions, founderNote, relatedServices, nextCaseStudy) but rendering Portable Text needs a renderer dependency we haven't wired. Adding now would be premature; defer until a real case demands the longer-form narrative.
+- Orphan cleanup pattern: explicit ID list, never bulk-delete by query. Bulk-delete-by-query in a seed script is too easy to misuse; named IDs make the script auditable.
+- The seed script is the source of truth for these two cases. `createOrReplace` overwrites Studio edits on re-run — same posture as `seed-services.mjs`. If editor edits start to accumulate, switch to the patch.set pattern from `seed-home-page.mjs`.
+
+Blockers:
+- /about still a placeholder.
+- /blog → /insights route migration still pending.
+- Real heroImage uploads pending — text-only cards work but visual richness is missing.
+
+Verification:
+- `npm run typecheck` clean after all four page rewrites.
+- Independent verify-fetch through `published` perspective on three queries:
+  - `workIndexQuery` returns 2 case studies (orphan removed).
+  - `homeSelectedWorkQuery` returns 2 case studies, both with client + summary populated. **HomeSelectedWork on the homepage no longer hidden.**
+  - `caseStudyBySlugQuery` resolves all 4 slug × locale combinations: en/ai-lead-triage-saas, ru/ai-triazh-lidov-saas, en/company-ai-brain-agency, ru/ai-mozg-agentstva. Each returns full doc with atAGlance × 5, outcomes × 3, finalCta filled.
+
+Next step:
+- /about MVP. The schema's aboutPage singleton has hero, founder ref, what-it-is body PT, how-we-work body PT, principles[], expertiseAreas[], teamSummary, finalCta. For AI-first MVP a 5-section page is enough: Hero (heroStatement) → What FIRFAROV is (could fold into hero or use principles[] as the next section) → Founder (move HomeFounderMoment-style block here, fed by aboutPage.founder ref → author doc) → Principles → Final CTA. Likely needs an `author` seed too if we want a real founder card.
+- After /about, `/blog → /insights` route migration becomes the last big structural change before launch.
 
 ### 2026-05-07 — Service detail pages: AI-first MVP
 

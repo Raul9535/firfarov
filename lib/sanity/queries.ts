@@ -87,6 +87,23 @@ export const caseStudyBySlugQuery = defineQuery(`
   )][0]
 `);
 
+// /work index — only case studies with both slugs filled (linkable from either locale).
+// Same projection shape as homeSelectedWorkQuery so the index card and the home featured
+// card render through the same data fields.
+export const workIndexQuery = defineQuery(`
+  *[_type == "caseStudy" && defined(slugEn.current) && defined(slugRu.current)]
+    | order(publishedAt desc) {
+    _id,
+    title,
+    client,
+    summary,
+    "slugEn": slugEn.current,
+    "slugRu": slugRu.current,
+    publishedAt,
+    heroImage
+  }
+`);
+
 export const allCaseStudySlugsQuery = defineQuery(`
   *[_type == "caseStudy" && defined(slugEn.current) && defined(slugRu.current)] {
     "slugEn": slugEn.current,

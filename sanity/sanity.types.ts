@@ -1440,6 +1440,18 @@ export type CaseStudyBySlugQueryResult = {
   finalCta?: CtaBlock;
   seo?: SeoMetadata;
 } | null;
+// Variable: workIndexQuery
+// Query: *[_type == "caseStudy" && defined(slugEn.current) && defined(slugRu.current)]    | order(publishedAt desc) {    _id,    title,    client,    summary,    "slugEn": slugEn.current,    "slugRu": slugRu.current,    publishedAt,    heroImage  }
+export type WorkIndexQueryResult = Array<{
+  _id: string;
+  title: LocalizedText | null;
+  client: LocalizedText | null;
+  summary: LocalizedText | null;
+  slugEn: string | null;
+  slugRu: string | null;
+  publishedAt: string | null;
+  heroImage: MediaAsset | null;
+}>;
 // Variable: allCaseStudySlugsQuery
 // Query: *[_type == "caseStudy" && defined(slugEn.current) && defined(slugRu.current)] {    "slugEn": slugEn.current,    "slugRu": slugRu.current  }
 export type AllCaseStudySlugsQueryResult = Array<{
@@ -1993,6 +2005,7 @@ declare module "@sanity/client" {
     '\n  *[_type == "service" && (\n    ($locale == "en" && slugEn.current == $slug) ||\n    ($locale == "ru" && slugRu.current == $slug)\n  )][0]\n': ServiceBySlugQueryResult;
     '\n  *[_type == "service"] | order(order asc) {\n    _id,\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current,\n    title,\n    tagline,\n    order\n  }\n': AllServicesQueryResult;
     '\n  *[_type == "caseStudy" && (\n    ($locale == "en" && slugEn.current == $slug) ||\n    ($locale == "ru" && slugRu.current == $slug)\n  )][0]\n': CaseStudyBySlugQueryResult;
+    '\n  *[_type == "caseStudy" && defined(slugEn.current) && defined(slugRu.current)]\n    | order(publishedAt desc) {\n    _id,\n    title,\n    client,\n    summary,\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current,\n    publishedAt,\n    heroImage\n  }\n': WorkIndexQueryResult;
     '\n  *[_type == "caseStudy" && defined(slugEn.current) && defined(slugRu.current)] {\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current\n  }\n': AllCaseStudySlugsQueryResult;
     '\n  *[_type == "caseStudy"] | order(publishedAt desc) [0...$limit]\n': LatestCaseStudiesQueryResult;
     '\n  *[_type == "blogPost" && (\n    ($locale == "en" && slugEn.current == $slug) ||\n    ($locale == "ru" && slugRu.current == $slug)\n  )][0]\n': BlogPostBySlugQueryResult;

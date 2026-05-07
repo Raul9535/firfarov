@@ -58,4 +58,5 @@ export type {
   ServiceBySlugQueryResult,
   ThankYouPageQueryResult,
   WorkIndexPageQueryResult,
+  WorkIndexQueryResult,
 } from "../../sanity/sanity.types";
