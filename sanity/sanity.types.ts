@@ -970,7 +970,7 @@ export type HomePageQueryResult = {
   seo?: SeoMetadata;
 } | null;
 // Variable: aboutPageQuery
-// Query: *[_type == "aboutPage"][0]
+// Query: *[_type == "aboutPage"][0]{    ...,    founder->{      _id,      name,      role,      bio,      photo    }  }
 export type AboutPageQueryResult = {
   _id: string;
   _type: "aboutPage";
@@ -978,12 +978,13 @@ export type AboutPageQueryResult = {
   _updatedAt: string;
   _rev: string;
   heroStatement?: LocalizedText;
-  founder?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "author";
-  };
+  founder: {
+    _id: string;
+    name: string | null;
+    role: LocalizedText | null;
+    bio: LocalizedText | null;
+    photo: MediaAsset | null;
+  } | null;
   whatItIsEn?: Array<
     | {
         children?: Array<{
@@ -1995,7 +1996,7 @@ declare module "@sanity/client" {
   interface SanityQueries {
     '*[_type == "globalSettings"][0]': GlobalSettingsQueryResult;
     '*[_type == "homePage"][0]': HomePageQueryResult;
-    '*[_type == "aboutPage"][0]': AboutPageQueryResult;
+    '\n  *[_type == "aboutPage"][0]{\n    ...,\n    founder->{\n      _id,\n      name,\n      role,\n      bio,\n      photo\n    }\n  }\n': AboutPageQueryResult;
     '*[_type == "contactPage"][0]': ContactPageQueryResult;
     '*[_type == "workIndexPage"][0]': WorkIndexPageQueryResult;
     '*[_type == "blogIndexPage"][0]': BlogIndexPageQueryResult;

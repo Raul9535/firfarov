@@ -22,7 +22,21 @@ export const globalSettingsQuery = defineQuery(`*[_type == "globalSettings"][0]`
 
 // ─── Singleton pages ────────────────────────────────────────────
 export const homePageQuery = defineQuery(`*[_type == "homePage"][0]`);
-export const aboutPageQuery = defineQuery(`*[_type == "aboutPage"][0]`);
+// /about reads the singleton plus the founder reference dereffed in-query so the
+// founder section gets `name`, `role`, `bio`, `photo` directly (no second roundtrip).
+// Spread `...` keeps every other aboutPage field unchanged; only `founder` is rewritten.
+export const aboutPageQuery = defineQuery(`
+  *[_type == "aboutPage"][0]{
+    ...,
+    founder->{
+      _id,
+      name,
+      role,
+      bio,
+      photo
+    }
+  }
+`);
 export const contactPageQuery = defineQuery(`*[_type == "contactPage"][0]`);
 export const workIndexPageQuery = defineQuery(`*[_type == "workIndexPage"][0]`);
 export const blogIndexPageQuery = defineQuery(`*[_type == "blogIndexPage"][0]`);

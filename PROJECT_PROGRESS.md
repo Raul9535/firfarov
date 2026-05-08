@@ -21,10 +21,75 @@ legal, `/ru/...` mirror. Технический стек и Sanity schema-кар
 ## Current Status
 
 - Branch: `hero-layout-polish` (PR [#1](https://github.com/Raul9535/firfarov/pull/1) → `main`).
-- Last verified: 2026-05-07 — `npm run typecheck` clean. Главная: **все 8 секций** с реальным AI-first контентом, включая HomeSelectedWork (теперь с 2 кейсами). Service detail (EN+RU): 5 MVP-секций. Work pages (EN+RU): index + detail оба data-driven; 2 case studies seeded.
-- Main blocker: `/about` всё ещё placeholder; `/blog → /insights` route migration ещё впереди; brand fonts не подключены.
+- Last verified: 2026-05-08 — `npm run typecheck` clean. Главная: все 8 секций реальные. Service detail (EN+RU): 5 MVP-секций × 4 сервиса. Work pages (EN+RU): index + detail data-driven (2 cases). **About (EN+RU): 5 MVP-секций data-driven** (Hero / Founder / How we work / Expertise / Final CTA). Author seeded (Vlad Firfarov), aboutPage seeded.
+- Main blocker: `/blog → /insights` route migration ещё впереди; brand fonts не подключены; реальные изображения (heroImage на cases, photo на author) не загружены.
 
 ## Daily Log
+
+### 2026-05-08 — About page: AI-first MVP
+
+Goal:
+- Move /about and /ru/about from the SectionStack placeholder to a real, AI-first About surface. Seed the founder author + the aboutPage singleton so the page lights up immediately. Stay inside the existing Sanity data model — no schema changes, no extra refactor, no Portable Text renderer dependency.
+
+Done:
+- Extended `aboutPageQuery` in `lib/sanity/queries.ts` with an inline deref on the `founder` reference (`founder->{ _id, name, role, bio, photo }`). The spread `...` keeps every other aboutPage field intact, so future fields (SEO, teamSummary, the Portable Text bodies) flow through unchanged. Regenerated typegen — 29 schema types + 22 GROQ queries; `AboutPageQueryResult.founder` is now a typed object instead of a bare reference.
+- Rewrote `app/(site)/about/page.tsx` (EN) and `app/(site)/ru/about/page.tsx` (RU mirror) from a SectionStack placeholder into a 5-section AI-first MVP:
+  1. Hero — `heroStatement` rendered at page-hero scale (`max-w-5xl`, `text-4xl → text-6xl` serif, balanced).
+  2. Founder — 4|8 spine (mono "Founder" / "Основатель" eyebrow LEFT, content RIGHT). Optional photo (4:5, `max-w-sm`) above name (display serif h2) + role (mono uppercase) + bio (lead muted).
+  3. How we work — 4|8 spine, eyebrow "How we work" / "Как мы работаем" LEFT; `principles[]` as a hairline-separated list in `col-span-8` — heading (display serif h3) + description (muted lead).
+  4. Expertise — 4|8 spine, eyebrow "Expertise" / "Экспертиза" LEFT; `expertiseAreas[]` as a 2-column serif grid in `col-span-8`.
+  5. Final CTA — 4|8 spine, eyebrow "Get started" / "Начать" LEFT; size="lg" Button driven by `aboutPage.finalCta` RIGHT.
+  Each section returns null when its source field is empty, so a half-filled aboutPage still renders cleanly.
+- Created `scripts/seed-about-page.mjs`. One atomic transaction:
+  - `createIfNotExists` on the author doc (`author-vlad-firfarov`, `_type: "author"`, `name`).
+  - `createIfNotExists` on the aboutPage singleton.
+  - `patch.set` on the author with `name`, `role`, `bio` (EN+RU).
+  - `patch.set` on aboutPage with `heroStatement`, `founder` reference, 4 `principles[]`, 6 `expertiseAreas[]`, `finalCta`.
+  Non-destructive: `patch.set` only writes the named fields; SEO, teamSummary, Portable Text bodies, anything else the editor adds via Studio survives a re-run. Stable `_key`s on every array item (`beyond-prompting`, `outcome-over-output`, `author-led`, `honest-scope`, `exp-1`…`exp-6`).
+- Seeded content:
+  - `heroStatement` — "FIRFAROV is an author-led AI implementation studio — built for the small and mid-sized businesses that need real systems, not pilots." / RU mirror.
+  - 4 principles: We build systems, not prompts · Outcome over output · Author-led, not relay-race · Honest scope. Each EN+RU heading + description.
+  - 6 expertiseAreas: Sales agents and lead-qualification flows · Support automation and ticket triage · Content production systems · Internal AI knowledge bases (RAG, semantic search) · Operations workflow automation (n8n, Make, custom) · AI audit and roadmap design.
+  - `finalCta` — "Book an AI audit" / "Заказать AI-аудит", `/contact`, primary.
+  - Founder: name "Vlad Firfarov", role "Founder" / "Основатель", bio paragraph (EN+RU) — placeholder copy flagged for refinement.
+- Founder photo intentionally not seeded. Sanity image upload via API would need either `dangerouslyAllowSVG` on the schema or a raster encoder dependency. Page handles the missing photo gracefully (text-only founder block); upload via Studio when ready.
+
+Changed files:
+- `lib/sanity/queries.ts` — `aboutPageQuery` extended with inline founder deref.
+- `sanity/sanity.types.ts` — regenerated; `AboutPageQueryResult.founder` typed.
+- `scripts/seed-about-page.mjs` — new (author + aboutPage in one transaction).
+- `app/(site)/about/page.tsx` — full rewrite from SectionStack placeholder to 5-section MVP.
+- `app/(site)/ru/about/page.tsx` — RU mirror with localized eyebrows.
+- `PROJECT_PROGRESS.md` — current status updated; this entry appended.
+
+Decisions:
+- Stay inside the current schema. The aboutPage singleton already has heroStatement, founder ref, principles[], expertiseAreas[], finalCta — exactly the shape the AI-first MVP needs. No schema migration, no new fields. Portable Text bodies (`whatItIsEn/Ru`, `howWeWorkEn/Ru`) and `teamSummary` deferred — heroStatement + principles cover the same conceptual ground for now.
+- Patch.set + `createIfNotExists` over `createOrReplace` for the seed. Same posture as `seed-home-page.mjs` (non-destructive). Author + aboutPage both go through this pattern; editor edits in Studio outside the seeded fields survive future re-runs.
+- Single transaction wrapping both upserts + both patches. Either both succeed or neither does — avoids the half-state of "author exists but aboutPage missing the reference".
+- Section eyebrows ("Founder", "How we work", "Expertise", "Get started" + RU equivalents) live in code, not the schema. Same convention as homepage and service-detail eyebrows — framing labels evolve with layout, not editor whim.
+- Same data path on EN and RU pages. `aboutPageQuery` is locale-agnostic; only the picked text differs (`pickLocalized(field, locale)` per page). Cuts the second roundtrip and keeps the two mirrors in lockstep.
+- Founder photo handling: skip in seed, render conditionally. The schema makes `photo` optional and the page checks `founder.photo?.image` before invoking `urlForImage`. No null-pointer noise on the published page.
+
+Blockers:
+- /about now data-driven, no blockers on this page.
+- Founder photo is missing — text-only founder block until uploaded via Studio.
+- `/blog → /insights` route migration still pending — last big AI-first sitemap structural change before launch.
+- Brand fonts still on system fallbacks; real heroImage on case studies still missing.
+
+Verification:
+- `npm run typecheck` clean after page rewrites + typegen regen.
+- `node scripts/seed-about-page.mjs` ran clean — transaction committed.
+- Independent verify-fetch through `published` perspective on `aboutPageQuery`:
+  - `heroStatement` present (EN+RU).
+  - `founder` deref'd inline → `{ name: "Vlad Firfarov", role.en: "Founder", bio: <paragraph>, photo: absent }`.
+  - `principles.length === 4`, all with EN+RU heading + description, stable `_key`s.
+  - `expertiseAreas.length === 6`, all localized, stable `_key`s.
+  - `finalCta`: label "Book an AI audit" / "Заказать AI-аудит", href `/contact`, variant `primary`.
+- Pages will resolve at `/about` and `/ru/about` with all 5 sections populated except the founder photo.
+
+Next step:
+- `/blog → /insights` route migration. Rename `app/(site)/blog/` and `app/(site)/ru/blog/` to `insights/`, drop the unused `category/[slug]` folder, update the link target inside `HomeLatestThinking` from `/blog/${slug}` to `/insights/${slug}`. Optionally rename `HomeLatestThinking` → `HomeInsights` for symmetry. After that the AI-first sitemap is fully reflected in the routes.
+- Adjacent polish: upload founder photo via Studio; tighten the founder bio copy with real launch positioning; add Portable Text renderer (e.g. `@portabletext/react`) if /about, blog detail, or case-study detail need long-form narrative.
 
 ### 2026-05-07 — Case studies / work: AI-first MVP
 
