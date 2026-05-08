@@ -5,10 +5,19 @@ import { pickLocalized } from "@/lib/i18n/localize";
 import { resolveCtaHref } from "@/lib/i18n/routing";
 import { sanityFetch } from "@/lib/sanity/fetch";
 import { homePageQuery } from "@/lib/sanity/queries";
+import { HeroBackgroundVideo } from "./HeroBackgroundVideo";
 
 type HomeHeroProps = {
   locale: Locale;
 };
+
+/**
+ * Local file in `public/`. If the file is missing the hero renders
+ * fine — `HeroBackgroundVideo` errors out cleanly and removes both the
+ * video element and the scrim. To enable the bg video, drop the file
+ * at `public/hero-ai-loop.mp4`; nothing else needs to change.
+ */
+const HERO_VIDEO_SRC = "/hero-ai-loop.mp4";
 
 /**
  * Home hero — entrance to the page. Unlike the other home sections, hero doesn't sit in
@@ -21,6 +30,14 @@ type HomeHeroProps = {
  *
  * Padding scales `py-24 → py-32 → py-40` so the hero gains weight on wider viewports
  * without floating on a 100vh canvas.
+ *
+ * Background video: optional, decorative. Section gets `relative isolate
+ * overflow-hidden` so the video + scrim layers (rendered by
+ * `HeroBackgroundVideo`) are clipped to the hero box and stack inside
+ * a fresh stacking context. Container is forced to `relative z-10` so
+ * heading / lead / CTA always sit above the video. When the file is
+ * absent the inner component returns null and nothing about the hero
+ * layout shifts.
  */
 export async function HomeHero({ locale }: HomeHeroProps) {
   const home = await sanityFetch(homePageQuery);
@@ -34,9 +51,11 @@ export async function HomeHero({ locale }: HomeHeroProps) {
   return (
     <section
       aria-labelledby="home-hero-heading"
-      className="border-b border-rule"
+      className="relative isolate overflow-hidden border-b border-rule"
     >
-      <Container className="py-24 md:py-32 lg:py-40">
+      <HeroBackgroundVideo src={HERO_VIDEO_SRC} />
+
+      <Container className="relative z-10 py-24 md:py-32 lg:py-40">
         {heading ? (
           <h1
             id="home-hero-heading"
