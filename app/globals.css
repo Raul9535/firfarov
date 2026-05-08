@@ -3,7 +3,6 @@
    which left every utility used only in `components/` (font-serif, mx-auto, max-w-site,
    px-site, justify-between, …) un-generated. */
 @import "tailwindcss";
-@import "../styles/fonts.css";
 @import "../styles/tokens.css";
 
 /* Tailwind v4 auto-detects classes by walking from this file's directory (app/), so

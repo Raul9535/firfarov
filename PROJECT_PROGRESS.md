@@ -21,10 +21,71 @@ legal, `/ru/...` mirror. Технический стек и Sanity schema-кар
 ## Current Status
 
 - Branch: `hero-layout-polish` (PR [#1](https://github.com/Raul9535/firfarov/pull/1) → `main`).
-- Last verified: 2026-05-08 — `npm run typecheck` clean, `npm run build` green. Главная: все 8 секций реальные. Service detail (EN+RU): 5 MVP-секций × 4 сервиса. Work pages (EN+RU): index + detail data-driven (2 cases). About (EN+RU): 5 MVP-секций data-driven (Hero / Founder / How we work / Expertise / Final CTA), author seeded. **`/blog → /insights` migration done** — `/insights` + `/ru/insights` + `[slug]` для обоих локалей зарегистрированы; старые `/blog/*` папки удалены вместе с `category/[slug]`.
-- Main blocker: launch-polish pass впереди — brand fonts не подключены; реальные изображения (heroImage на cases, photo на author) не загружены; финальный copy pass + SEO/meta cleanup; merge в main.
+- Last verified: 2026-05-08 — `npm run typecheck` clean, `npm run build` green. Главная: все 8 секций реальные. Service detail (EN+RU): 5 MVP-секций × 4 сервиса. Work pages (EN+RU): index + detail data-driven (2 cases). About (EN+RU): 5 MVP-секций data-driven (Hero / Founder / How we work / Expertise / Final CTA), author seeded. `/blog → /insights` migration done. **Brand fonts live** — Inter / Fraunces / JetBrains Mono подключены через `next/font/google`, self-hosted, привязаны к `--font-{sans,serif,mono}` через token-вариативы. Все страницы рендерятся на реальной типографике (system fallback больше не используется, кроме Cyrillic glyphs в `font-serif` — Fraunces без кириллицы, fallback Times New Roman через next/font auto-generated metric-matched face).
+- Main blocker: launch-polish pass продолжается — founder photo + real heroImage не загружены, copy pass, SEO/meta cleanup, sitemap dynamic-slug enrichment, merge PR #1 в main.
 
 ## Daily Log
+
+### 2026-05-08 — Brand fonts via next/font (launch-polish pass #1)
+
+Goal:
+- Replace the system-font fallback with the brand fonts named in the design tokens. Inter / Fraunces / JetBrains Mono. Self-hosted via `next/font/google`, no runtime hop to Google Fonts. Apply across the whole site without touching the editorial layout.
+
+Done:
+- Wired `next/font/google` in `app/layout.tsx`. Three loaders, each producing a CSS variable on `<html>`:
+  - `Inter` → `--font-inter` (subsets: latin, cyrillic) — drives `--font-sans`.
+  - `Fraunces` → `--font-fraunces` (subsets: latin only — Fraunces ships no cyrillic on Google Fonts) — drives `--font-serif`.
+  - `JetBrains_Mono` → `--font-jetbrains-mono` (subsets: latin, cyrillic) — drives `--font-mono`.
+  Each loader uses `display: "swap"` so text stays visible during the (very short) font-load window. next/font auto-generates a metric-matched fallback face per family ("Inter Fallback", "Fraunces Fallback" → Times New Roman, "JetBrains Mono Fallback") with `size-adjust` / `ascent-override` / `descent-override` calibrated to reduce CLS during swap.
+- Updated `styles/tokens.css`. Each typography token now wraps the next/font variable as the leading family with the original generic stack as fallback:
+  - `--font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;`
+  - `--font-serif: var(--font-fraunces), Georgia, ui-serif, serif;`
+  - `--font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;`
+  Keeping the rest of the stack means per-glyph substitution still works if next/font's fallback face fails for any reason. In practice, with Fraunces lacking cyrillic, RU headings land on Times New Roman via the auto-generated Fraunces Fallback — Georgia is the second hop only on outright load failure.
+- Removed the placeholder `styles/fonts.css` (single-line comment file, no longer needed) and dropped its `@import` from `app/globals.css`. One less indirection; next/font owns the font lifecycle now.
+- The `<html>` element gets all three font variables via className: `${fontSans.variable} ${fontSerif.variable} ${fontMono.variable}`. Body still pulls `font-family: var(--font-sans)` from the base layer; every `font-serif` / `font-mono` utility resolves through the same variables.
+
+Roles confirmed across the site:
+- `font-sans` — Inter (body / UI default; site chrome, paragraphs, lists, contact form).
+- `font-serif` — Fraunces (display headings; Hero, section h2/h3, founder name, case-study titles, service taglines, final-CTA headings).
+- `font-mono` — JetBrains Mono (eyebrows, dates, "At a glance" labels, mono navlinks in header/footer).
+
+Changed files:
+- `app/layout.tsx` — three next/font loaders + variables applied to `<html>` className.
+- `styles/tokens.css` — typography tokens point at next/font variables.
+- `app/globals.css` — dropped `@import "../styles/fonts.css"`.
+- `styles/fonts.css` — removed.
+- `PROJECT_PROGRESS.md` — current status updated; this entry appended.
+
+Decisions:
+- Honour the brand spec as written. Fraunces is the serif name in tokens — kept it, even though it has no Google-Fonts cyrillic subset. Switching to a cyrillic-capable serif (Spectral, Lora, Source Serif 4) would have been a brand-level change that goes beyond this launch-polish step. Documenting the gap; a deliberate font swap can land later if RU display rendering becomes a priority.
+- next/font's auto-generated fallback face is acceptable for cyrillic glyphs in headings. Times New Roman (the size-adjusted Fraunces Fallback) is a reasonable serif universal substitute — far better than an unstyled flash of Times-as-Times. The cyrillic h1/h2 still reads as serif, just not as Fraunces.
+- Fonts remain self-hosted. next/font fetches woff2 at build time and emits files under `/_next/static/media/`. No runtime call to fonts.googleapis.com — cleaner privacy posture (no third-party request leaking visitor IP/UA to Google) and one less external dependency in the request chain.
+- Variable fonts only — no explicit `weight` parameter, so the full weight axis is available. This keeps payload small (one woff2 per subset, not one per weight) and lets headings pick weights freely without re-fetching.
+- Deleted `styles/fonts.css` rather than leaving it as a stub. Stub files invite confusion about what owns what; with next/font owning the font lifecycle the file has nothing to do.
+
+Blockers:
+- None on typography. Site renders on real brand fonts in both locales.
+- Cyrillic serif gap (above) — not a blocker for ship, but worth flagging in the launch checklist.
+- Launch-polish queue continues: founder photo, real heroImage on case studies, copy pass, SEO/meta cleanup, sitemap dynamic-slug enrichment, merge PR #1 → main.
+
+Verification:
+- `npm run typecheck` clean.
+- `rm -rf .next && npm run build` green; same 26 routes prerender as before, no new errors.
+- Compiled CSS at `.next/static/css/*.css` contains:
+  - `@font-face` declarations for Inter (8 ranges including cyrillic), Fraunces (3 latin/latin-ext ranges), JetBrains Mono (6 ranges including cyrillic), each pointing at `/_next/static/media/<hash>.woff2`.
+  - Auto-generated `Inter Fallback`, `Fraunces Fallback` (`local("Times New Roman")`, `size-adjust:115.45%`), `JetBrains Mono Fallback` faces with metric overrides for CLS reduction.
+  - Resolved `:root` values: `--font-sans:var(--font-inter),ui-sans-serif,system-ui,sans-serif`, `--font-serif:var(--font-fraunces),Georgia,ui-serif,serif`, `--font-mono:var(--font-jetbrains-mono),ui-monospace,SFMono-Regular,monospace`.
+  - `body{...font-family:var(--font-sans)}` — Inter inherited site-wide.
+- 16 woff2 files emitted under `.next/static/media/` (multiple subsets per family, all served self-hosted).
+
+Next step:
+- Founder photo upload via Sanity Studio (4:5 ratio looks best with the existing layout). Tighten the founder bio copy on the same pass if it's still placeholder-y.
+- Case-study heroImage uploads (both seeded cases, 16:9 ratio).
+- Copy pass — read every section out loud, ship one consolidated diff.
+- SEO/meta cleanup — verify `globalSettings.defaultSeo` covers fallbacks; sweep page-level `buildMetadata` calls; confirm OpenGraph defaults.
+- `app/sitemap.ts` dynamic-slug enrichment via `allCaseStudySlugsQuery` + `allBlogPostSlugsQuery`.
+- Merge PR #1 → `main`, run first Vercel prod deploy.
 
 ### 2026-05-08 — /blog → /insights route migration
 
