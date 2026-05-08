@@ -15,12 +15,13 @@
 
   /* Typography
      The leading font in each stack comes from a CSS variable populated by
-     next/font in `app/layout.tsx` (`--font-inter`, `--font-fraunces`,
-     `--font-jetbrains-mono`). Fallbacks remain so per-glyph substitution
-     still works — Fraunces ships no cyrillic on Google Fonts, so RU
-     headings land on Georgia for those glyphs without flicker. */
+     next/font in `app/layout.tsx` (`--font-inter`, `--font-spectral`,
+     `--font-jetbrains-mono`). Fallbacks remain only as a load-failure
+     safety net — all three families ship native cyrillic, so per-glyph
+     substitution to Georgia / system serif should never be reached in
+     normal operation. */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-fraunces), Georgia, ui-serif, serif;
+  --font-serif: var(--font-spectral), Georgia, ui-serif, serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 
   /* Layout

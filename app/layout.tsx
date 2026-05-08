@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Spectral } from "next/font/google";
 import { resolveLocaleFromPath } from "@/lib/i18n/routing";
 import { buildMetadata } from "@/lib/seo/metadata";
 
@@ -13,10 +13,16 @@ import "./globals.css";
  *
  * Roles:
  *   - Inter           → --font-sans  (body / UI default; latin + cyrillic)
- *   - Fraunces        → --font-serif (display headings; latin only — cyrillic
- *                       glyphs fall back to Georgia in tokens, since Fraunces
- *                       does not ship a cyrillic subset on Google Fonts)
+ *   - Spectral        → --font-serif (display headings; latin + cyrillic —
+ *                       Production Type's screen-first editorial serif,
+ *                       chosen for native cyrillic so RU headings render
+ *                       on-brand instead of falling back to Times New Roman)
  *   - JetBrains Mono  → --font-mono  (eyebrows, dates, meta; latin + cyrillic)
+ *
+ * Spectral is not a variable font on Google Fonts — explicit weights are
+ * declared. 400 (regular paragraph weight, used in Hero lead), 600 (display
+ * headings, the dominant on-page serif weight), 700 (reserved for emphasis
+ * on the largest hero scales). 500 dropped — no current heading depends on it.
  *
  * `display: "swap"` keeps text visible during the brief font-load window —
  * acceptable since the fallback stack already roughly matches metrics.
@@ -28,10 +34,11 @@ const fontSans = Inter({
   variable: "--font-inter",
 });
 
-const fontSerif = Fraunces({
-  subsets: ["latin"],
+const fontSerif = Spectral({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "600", "700"],
   display: "swap",
-  variable: "--font-fraunces",
+  variable: "--font-spectral",
 });
 
 const fontMono = JetBrains_Mono({
