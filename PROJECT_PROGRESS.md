@@ -21,10 +21,78 @@ legal, `/ru/...` mirror. Технический стек и Sanity schema-кар
 ## Current Status
 
 - Branch: `hero-layout-polish` (PR [#1](https://github.com/Raul9535/firfarov/pull/1) → `main`).
-- Last verified: 2026-05-08 — `npm run typecheck` clean. Главная: все 8 секций реальные. Service detail (EN+RU): 5 MVP-секций × 4 сервиса. Work pages (EN+RU): index + detail data-driven (2 cases). **About (EN+RU): 5 MVP-секций data-driven** (Hero / Founder / How we work / Expertise / Final CTA). Author seeded (Vlad Firfarov), aboutPage seeded.
-- Main blocker: `/blog → /insights` route migration ещё впереди; brand fonts не подключены; реальные изображения (heroImage на cases, photo на author) не загружены.
+- Last verified: 2026-05-08 — `npm run typecheck` clean, `npm run build` green. Главная: все 8 секций реальные. Service detail (EN+RU): 5 MVP-секций × 4 сервиса. Work pages (EN+RU): index + detail data-driven (2 cases). About (EN+RU): 5 MVP-секций data-driven (Hero / Founder / How we work / Expertise / Final CTA), author seeded. **`/blog → /insights` migration done** — `/insights` + `/ru/insights` + `[slug]` для обоих локалей зарегистрированы; старые `/blog/*` папки удалены вместе с `category/[slug]`.
+- Main blocker: launch-polish pass впереди — brand fonts не подключены; реальные изображения (heroImage на cases, photo на author) не загружены; финальный copy pass + SEO/meta cleanup; merge в main.
 
 ## Daily Log
+
+### 2026-05-08 — /blog → /insights route migration
+
+Goal:
+- Bring routing in line with the AI-first sitemap. Move `/blog` and `/ru/blog` to `/insights` and `/ru/insights`. Drop the unused `category/[slug]` route — out of MVP scope. Update every internal link that pointed at `/blog/...`. Stay routing + links only — no schema changes, no data refactor.
+
+Done:
+- Created `app/(site)/insights/page.tsx`, `app/(site)/insights/[slug]/page.tsx`, `app/(site)/ru/insights/page.tsx`, `app/(site)/ru/insights/[slug]/page.tsx`. Same placeholder shape as the previous `/blog` files (Container + eyebrow + h1 + lead paragraph), but with corrected `path` for `buildMetadata`, EN titles "Insights — FIRFAROV", RU title "Заметки — FIRFAROV", and locale-appropriate eyebrow/heading copy ("Insights" / "Заметки", "Insight" / "Заметка" on detail). When the Portable Text renderer arrives the index + detail pages get the real Sanity-driven content layer; for now they keep the placeholder posture so the migration ships independently of body rendering.
+- `git rm -r app/(site)/blog app/(site)/ru/blog` — removed all six old files (index + [slug] + category/[slug] for both locales).
+- `components/sections/home/LatestThinking.tsx`:
+  - Link target `localizePath(\`/blog/${slug}\`, locale)` → `localizePath(\`/insights/${slug}\`, locale)`.
+  - Section eyebrow EN "Writing" → "Insights"; RU "Блог" → "Заметки". Section h2 ("Latest thinking" / "Свежие мысли") unchanged — that's section copy, not URL framing.
+- `config/navigation.ts`:
+  - Header nav item `{ href: "/blog", key: "blog" }` → `{ href: "/insights", key: "insights" }`. Header + footer pull from `primaryNavItems`, so this single change cascades to both via `SiteHeader.tsx` (the only consumer; `SiteFooter` doesn't import the array).
+- Dictionaries `lib/i18n/dictionaries/{en,ru}.ts`:
+  - Renamed nav key `blog` → `insights`. EN label "Blog" → "Insights"; RU "Блог" → "Заметки". `Dictionary` type is derived from `en` (`typeof en`) — both locales now agree on the new key without an explicit type rename.
+- `app/sitemap.ts`:
+  - `staticPaths` entry "/blog" → "/insights". Updated trailing TODO to reference `/insights/[slug]` and note categories are out of MVP scope.
+- `scripts/seed-blog-posts.mjs`:
+  - Comment-only update — slug intent now reads "what /insights/[slug] would resolve under each locale" with a note that the document type stays `blogPost`. No script behaviour change.
+- Sanity schemas (`blogPost`, `blogIndexPage`, `blogCategory`) intentionally left untouched — per scope: routing + links only, document types are data-model identifiers, not URLs.
+
+Changed files:
+- `app/(site)/insights/page.tsx` — new (EN index).
+- `app/(site)/insights/[slug]/page.tsx` — new (EN detail placeholder).
+- `app/(site)/ru/insights/page.tsx` — new (RU index).
+- `app/(site)/ru/insights/[slug]/page.tsx` — new (RU detail placeholder).
+- `app/(site)/blog/**` — removed (3 files).
+- `app/(site)/ru/blog/**` — removed (3 files).
+- `components/sections/home/LatestThinking.tsx` — link + eyebrow updates.
+- `config/navigation.ts` — nav item href + key.
+- `lib/i18n/dictionaries/en.ts` — `nav.blog` → `nav.insights` + label.
+- `lib/i18n/dictionaries/ru.ts` — `nav.blog` → `nav.insights` + label.
+- `app/sitemap.ts` — staticPaths entry + TODO comment.
+- `scripts/seed-blog-posts.mjs` — comment update only.
+- `PROJECT_PROGRESS.md` — current status updated; this entry appended.
+
+Decisions:
+- Routing scope only. Sanity document types (`blogPost`, `blogIndexPage`, `blogCategory`) keep their names — they're data-model identifiers, not URLs. Renaming would force a typegen regen + every existing seeded `blogPost` doc to migrate. Not in scope, not necessary for the URL change.
+- Renamed dictionary key `blog` → `insights`. The key is a structural i18n identifier; pairing it with a route called `insights` keeps lookups self-documenting (`dict.nav.insights` for the link to `/insights`). Touched 3 files (navigation + en/ru), no Dictionary type rebuild needed since `Dictionary = typeof en`.
+- Placeholder pages, not Sanity-driven detail. `/insights` and `/insights/[slug]` keep the same placeholder posture as the old `/blog` files until the Portable Text renderer is wired. That's a separate (deferred) effort and would have bloated this migration. Comment in the EN detail page still references `blogPostBySlugQuery` so the wiring path is clear when the renderer lands.
+- `category/[slug]` dropped, not stubbed. The category route was placeholder-only (no taxonomy navigation rendered anywhere) and AI-first content strategy doesn't lean on category browsing. The `blogCategory` schema stays — if categories return as a feature, they're cheap to re-introduce.
+- `LatestThinking` section h2 ("Latest thinking" / "Свежие мысли") kept. The section's purpose ("recently published thinking") doesn't change with the URL; only the URL-adjacent eyebrow ("Writing" / "Блог") was reframed to match the new label vocabulary.
+- Comment polish in the seed script but no schema-comment polish (`blogPost.ts` etc. still mention `/blog/[slug]` in their doc strings). Documentation drift inside Sanity schemas is low-priority and changing those would invite "while we're here" temptation; leave for a deliberate sweep.
+
+Blockers:
+- None on the routing layer. AI-first sitemap is now fully reflected in the routes (`/`, `/about`, `/services` + 4 services, `/work` + `/work/[slug]`, `/insights` + `/insights/[slug]`, `/contact`, `/thank-you`, legal, `/ru/...` mirror).
+- Launch-polish queue (after this migration): brand fonts, founder photo upload, real heroImage uploads on case studies, final copy pass, SEO/meta cleanup, sitemap dynamic-slug enrichment, merge PR #1 to main.
+
+Verification:
+- `npm run typecheck` clean (after `rm -rf .next` to drop stale generated route types from before the rename).
+- `npm run build` green. Route table now includes:
+  - `/insights`, `/insights/[slug]`, `/ru/insights`, `/ru/insights/[slug]` ✓
+  - `/blog` and any `/blog/*` no longer present ✓
+  - All other existing routes preserved (work, services, about, etc.).
+- Grep: `grep -rn "/blog\b" --include="*.ts" --include="*.tsx"` excluding worktrees + node_modules returns nothing in active route/component files. Remaining matches are doc comments inside Sanity schemas (`blogPost.ts`, `blogIndexPage.ts`, `blogCategory.ts`) — left alone per "no schema refactor".
+- `HomeLatestThinking` href confirmed via grep: `localizePath(\`/insights/${slug}\`, locale)`.
+- Header nav rendered through `primaryNavItems` from `config/navigation.ts`; the single nav entry now points at `/insights`.
+
+Next step:
+- Launch-polish pass — architecture-stable, no more sitemap shifts. Suggested order:
+  1. Brand fonts via `next/font` (Inter / Fraunces / JetBrains Mono); update `styles/fonts.css`. Biggest visual lift remaining.
+  2. Founder photo upload via Studio; tighten founder bio copy.
+  3. Case-study heroImage uploads (both seeded cases).
+  4. Final copy pass — pick a quiet hour, read every section out loud, ship the diff in one commit.
+  5. SEO / meta cleanup — confirm `globalSettings.defaultSeo` covers fallbacks; sweep page-level `buildMetadata` calls.
+  6. Sitemap dynamic-slug enrichment — extend `app/sitemap.ts` with `/work/[slug]` + `/insights/[slug]` from `allCaseStudySlugsQuery` + `allBlogPostSlugsQuery`.
+  7. Merge PR #1 → `main`, run first Vercel prod deploy.
 
 ### 2026-05-08 — About page: AI-first MVP
 

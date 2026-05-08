@@ -61,8 +61,9 @@ const client = createClient({
 });
 
 // Stable IDs publish directly (no `drafts.` prefix). Slugs picked to match
-// what /blog/[slug] would resolve under each locale. publishedAt drives
-// the order returned by latestBlogPostsQuery.
+// what /insights/[slug] would resolve under each locale. publishedAt drives
+// the order returned by latestBlogPostsQuery. (Document type still
+// `blogPost` in Sanity — only the URL changed.)
 const posts = [
   {
     _id: "blog-calm-products-loud-market",

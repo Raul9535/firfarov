@@ -3,7 +3,7 @@ const ru = {
     about: "О студии",
     services: "Услуги",
     work: "Кейсы",
-    blog: "Блог",
+    insights: "Заметки",
     contact: "Контакты",
   },
   footer: {

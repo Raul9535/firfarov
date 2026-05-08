@@ -6,6 +6,6 @@ export const primaryNavItems: ReadonlyArray<{ href: string; key: NavKey }> = [
   { href: "/about", key: "about" },
   { href: "/services", key: "services" },
   { href: "/work", key: "work" },
-  { href: "/blog", key: "blog" },
+  { href: "/insights", key: "insights" },
   { href: "/contact", key: "contact" },
 ];

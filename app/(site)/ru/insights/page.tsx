@@ -4,14 +4,14 @@ import { buildMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = buildMetadata({
   locale: "ru",
-  path: "/blog",
-  title: "Блог — FIRFAROV",
+  path: "/insights",
+  title: "Заметки — FIRFAROV",
 });
 
-export default function BlogIndexPageRu() {
+export default function InsightsIndexPageRu() {
   return (
     <Container className="py-24">
-      <p className="font-mono text-xs uppercase tracking-widest text-ink-muted">Блог</p>
+      <p className="font-mono text-xs uppercase tracking-widest text-ink-muted">Заметки</p>
       <h1 className="mt-4 font-serif text-4xl text-ink md:text-5xl">Статьи</h1>
       <p className="mt-6 max-w-prose text-ink-muted">
         Посты будут загружаться из Sanity через{" "}

@@ -40,7 +40,7 @@ export async function HomeLatestThinking({ locale }: HomeLatestThinkingProps) {
   });
   if (!posts || posts.length === 0) return null;
 
-  const sectionLabel = locale === "ru" ? "Блог" : "Writing";
+  const sectionLabel = locale === "ru" ? "Заметки" : "Insights";
   const sectionHeading = locale === "ru" ? "Свежие мысли" : "Latest thinking";
 
   return (
@@ -75,7 +75,7 @@ export async function HomeLatestThinking({ locale }: HomeLatestThinkingProps) {
             return (
               <li key={post._id} className="border-b border-rule">
                 <Link
-                  href={localizePath(`/blog/${slug}`, locale)}
+                  href={localizePath(`/insights/${slug}`, locale)}
                   className="group block py-8 md:py-10"
                 >
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-baseline md:gap-8">

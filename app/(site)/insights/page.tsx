@@ -4,14 +4,14 @@ import { buildMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = buildMetadata({
   locale: "en",
-  path: "/blog",
-  title: "Blog — FIRFAROV",
+  path: "/insights",
+  title: "Insights — FIRFAROV",
 });
 
-export default function BlogIndexPage() {
+export default function InsightsIndexPage() {
   return (
     <Container className="py-24">
-      <p className="font-mono text-xs uppercase tracking-widest text-ink-muted">Blog</p>
+      <p className="font-mono text-xs uppercase tracking-widest text-ink-muted">Insights</p>
       <h1 className="mt-4 font-serif text-4xl text-ink md:text-5xl">Writing</h1>
       <p className="mt-6 max-w-prose text-ink-muted">
         Posts will be rendered from Sanity. Use{" "}

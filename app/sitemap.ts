@@ -7,7 +7,7 @@ const staticPaths = [
   "/about",
   "/services",
   "/work",
-  "/blog",
+  "/insights",
   "/contact",
   "/privacy",
   "/terms",
@@ -59,7 +59,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     });
   }
 
-  // TODO: extend with dynamic /work/[slug], /blog/[slug], and /blog/category/[slug]
-  // entries once Sanity is wired up — query slugs from lib/sanity/queries.
+  // TODO: extend with dynamic /work/[slug] and /insights/[slug] entries once
+  // Sanity is wired up — query slugs from lib/sanity/queries. Categories are
+  // out of MVP scope.
   return entries;
 }

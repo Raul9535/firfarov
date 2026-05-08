@@ -10,21 +10,24 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  // TODO: load real metadata from Sanity via blogPostBySlugQuery.
   return buildMetadata({
     locale: "en",
-    path: `/blog/category/${slug}`,
-    title: `${slug} — Blog — FIRFAROV`,
+    path: `/insights/${slug}`,
+    title: `${slug} — FIRFAROV`,
   });
 }
 
-export default async function BlogCategoryPage({ params }: { params: Promise<Params> }) {
+export default async function InsightPostPage({ params }: { params: Promise<Params> }) {
   const { slug } = await params;
   return (
     <Container className="py-24">
-      <p className="font-mono text-xs uppercase tracking-widest text-ink-muted">Category</p>
+      <p className="font-mono text-xs uppercase tracking-widest text-ink-muted">Insight</p>
       <h1 className="mt-4 font-serif text-4xl text-ink md:text-5xl">{slug}</h1>
       <p className="mt-6 max-w-prose text-ink-muted">
-        Category listings will use <code className="font-mono text-xs">blogPostsByCategoryQuery</code>.
+        Insight post rendering will read Portable Text from Sanity (
+        <code className="font-mono text-xs">blogPostBySlugQuery</code>) and render via a typed
+        PortableText component.
       </p>
     </Container>
   );
