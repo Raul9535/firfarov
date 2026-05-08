@@ -21,11 +21,14 @@ type HeroBackgroundVideoProps = {
  * Video and scrim are pushed below via `-z-10` inside the new
  * stacking context that `isolate` creates.
  *
- * Scrim — `bg-canvas/65` is a cream-tinted scrim, not a dark one.
- * The brand uses dark `text-ink` on the cream canvas; a literal dark
- * overlay would tank text contrast. Cream at 65% opacity dampens
- * video texture enough for readability while keeping the brand
- * palette intact. Tunable in one place if a different feel is wanted.
+ * Scrim — `bg-ink/55` is a dark scrim sized for a premium dark hero
+ * treatment. The hero section itself carries `bg-ink` as the always-on
+ * base, so when the video file is missing this component returns null
+ * and the section stays cleanly dark (not a half-state with scrim but
+ * no video). The 55% opacity strikes a balance: video texture stays
+ * visible enough to read as motion, white display text keeps reliable
+ * contrast across whatever footage gets dropped in. Tunable in one
+ * place if a different feel is wanted.
  *
  * Playback flags follow the video-as-decoration convention: muted +
  * autoPlay so it starts unprompted, loop so it never ends, playsInline
@@ -55,7 +58,7 @@ export function HeroBackgroundVideo({ src }: HeroBackgroundVideoProps) {
           onError={() => setHasError(true)}
         />
       </video>
-      <div aria-hidden className="absolute inset-0 -z-10 bg-canvas/65" />
+      <div aria-hidden className="absolute inset-0 -z-10 bg-ink/55" />
     </>
   );
 }
