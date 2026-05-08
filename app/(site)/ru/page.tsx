@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { HomeApproach } from "@/components/sections/home/Approach";
 import { HomeFinalCTA } from "@/components/sections/home/FinalCTA";
-import { HomeFounderMoment } from "@/components/sections/home/FounderMoment";
 import { HomeHero } from "@/components/sections/home/Hero";
 import { HomeLatestThinking } from "@/components/sections/home/LatestThinking";
 import { HomePositioning } from "@/components/sections/home/Positioning";
 import { HomeSelectedWork } from "@/components/sections/home/SelectedWork";
 import { HomeServicesOverview } from "@/components/sections/home/ServicesOverview";
+import { HomeUseCases } from "@/components/sections/home/UseCases";
 import { buildMetadata } from "@/lib/seo/metadata";
 
 const locale = "ru" as const;
@@ -20,7 +20,7 @@ export default function HomePageRu() {
       <HomePositioning locale={locale} />
       <HomeSelectedWork locale={locale} />
       <HomeServicesOverview locale={locale} />
-      <HomeFounderMoment locale={locale} />
+      <HomeUseCases locale={locale} />
       <HomeApproach locale={locale} />
       <HomeLatestThinking locale={locale} />
       <HomeFinalCTA locale={locale} />

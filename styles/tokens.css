@@ -13,14 +13,24 @@
   --color-rule: #e8e5dc;
   --color-accent: #d64a2b;
 
-  /* Typography */
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Fraunces", Georgia, ui-serif, serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  /* Typography
+     The leading font in each stack comes from a CSS variable populated by
+     next/font in `app/layout.tsx` (`--font-inter`, `--font-spectral`,
+     `--font-jetbrains-mono`). Fallbacks remain only as a load-failure
+     safety net — all three families ship native cyrillic, so per-glyph
+     substitution to Georgia / system serif should never be reached in
+     normal operation. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-spectral), Georgia, ui-serif, serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 
-  /* Layout */
+  /* Layout
+     Note: keys must be distinct across `--container-*` and `--spacing-*` namespaces
+     because in Tailwind v4 spacing tokens also feed `max-w-*`. With both named "site",
+     `max-w-site` was resolving to the spacing value (1.5rem) instead of the container
+     width (1280px), which collapsed every page to a 24px-wide column. */
   --container-site: 1280px;
-  --spacing-site: 1.5rem;
+  --spacing-gutter: 1.5rem;
 
   /* Radii ─ minimal, never decorative */
   --radius-xs: 2px;

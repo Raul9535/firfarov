@@ -50,10 +50,13 @@ export type {
   ContactPageQueryResult,
   GlobalSettingsQueryResult,
   HomePageQueryResult,
+  HomeSelectedWorkQueryResult,
+  HomeUseCasesQueryResult,
   LatestBlogPostsQueryResult,
   LatestCaseStudiesQueryResult,
   LegalPageBySlugQueryResult,
   ServiceBySlugQueryResult,
   ThankYouPageQueryResult,
   WorkIndexPageQueryResult,
+  WorkIndexQueryResult,
 } from "../../sanity/sanity.types";

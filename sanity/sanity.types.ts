@@ -242,64 +242,6 @@ export type CaseStudy = {
   seo?: SeoMetadata;
 };
 
-export type Service = {
-  _id: string;
-  _type: "service";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  title?: LocalizedText;
-  slugEn?: Slug;
-  slugRu?: Slug;
-  order?: number;
-  tagline?: LocalizedText;
-  positioning?: LocalizedText;
-  whoItsFor?: Array<
-    {
-      _key: string;
-    } & LocalizedText
-  >;
-  whatsIncluded?: Array<
-    {
-      _key: string;
-    } & LocalizedText
-  >;
-  processSteps?: Array<{
-    heading?: LocalizedText;
-    description?: LocalizedText;
-    _key: string;
-  }>;
-  deliverables?: Array<
-    {
-      _key: string;
-    } & LocalizedText
-  >;
-  techStack?: Array<string>;
-  caseStudies?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "caseStudy";
-  }>;
-  relatedServices?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "service";
-  }>;
-  faq?: Array<{
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    _key: string;
-    [internalGroqTypeReferenceTo]?: "faqItem";
-  }>;
-  finalCta?: CtaBlock;
-  seo?: SeoMetadata;
-};
-
 export type ThankYouPage = {
   _id: string;
   _type: "thankYouPage";
@@ -689,6 +631,75 @@ export type HomePage = {
     description?: LocalizedText;
     _key: string;
   }>;
+  useCases?: Array<{
+    heading?: LocalizedText;
+    description?: LocalizedText;
+    service?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "service";
+    };
+    _key: string;
+  }>;
+  finalCta?: CtaBlock;
+  seo?: SeoMetadata;
+};
+
+export type Service = {
+  _id: string;
+  _type: "service";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title?: LocalizedText;
+  slugEn?: Slug;
+  slugRu?: Slug;
+  order?: number;
+  tagline?: LocalizedText;
+  positioning?: LocalizedText;
+  whoItsFor?: Array<
+    {
+      _key: string;
+    } & LocalizedText
+  >;
+  whatsIncluded?: Array<
+    {
+      _key: string;
+    } & LocalizedText
+  >;
+  processSteps?: Array<{
+    heading?: LocalizedText;
+    description?: LocalizedText;
+    _key: string;
+  }>;
+  deliverables?: Array<
+    {
+      _key: string;
+    } & LocalizedText
+  >;
+  techStack?: Array<string>;
+  caseStudies?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "caseStudy";
+  }>;
+  relatedServices?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "service";
+  }>;
+  faq?: Array<{
+    _ref: string;
+    _type: "reference";
+    _weak?: boolean;
+    _key: string;
+    [internalGroqTypeReferenceTo]?: "faqItem";
+  }>;
   finalCta?: CtaBlock;
   seo?: SeoMetadata;
 };
@@ -872,7 +883,6 @@ export type AllSanitySchemaTypes =
   | FaqItem
   | BlogCategory
   | CaseStudy
-  | Service
   | ThankYouPage
   | BlogIndexPage
   | BlogPost
@@ -881,6 +891,7 @@ export type AllSanitySchemaTypes =
   | AboutPage
   | Author
   | HomePage
+  | Service
   | GlobalSettings
   | CtaBlock
   | SeoMetadata
@@ -944,11 +955,22 @@ export type HomePageQueryResult = {
     description?: LocalizedText;
     _key: string;
   }>;
+  useCases?: Array<{
+    heading?: LocalizedText;
+    description?: LocalizedText;
+    service?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "service";
+    };
+    _key: string;
+  }>;
   finalCta?: CtaBlock;
   seo?: SeoMetadata;
 } | null;
 // Variable: aboutPageQuery
-// Query: *[_type == "aboutPage"][0]
+// Query: *[_type == "aboutPage"][0]{    ...,    founder->{      _id,      name,      role,      bio,      photo    }  }
 export type AboutPageQueryResult = {
   _id: string;
   _type: "aboutPage";
@@ -956,12 +978,13 @@ export type AboutPageQueryResult = {
   _updatedAt: string;
   _rev: string;
   heroStatement?: LocalizedText;
-  founder?: {
-    _ref: string;
-    _type: "reference";
-    _weak?: boolean;
-    [internalGroqTypeReferenceTo]?: "author";
-  };
+  founder: {
+    _id: string;
+    name: string | null;
+    role: LocalizedText | null;
+    bio: LocalizedText | null;
+    photo: MediaAsset | null;
+  } | null;
   whatItIsEn?: Array<
     | {
         children?: Array<{
@@ -1201,6 +1224,30 @@ export type ThankYouPageQueryResult = {
   }>;
   seo?: SeoMetadata;
 } | null;
+// Variable: homeSelectedWorkQuery
+// Query: *[_type == "homePage"][0].selectedWork[]->{    _id,    title,    client,    summary,    "slugEn": slugEn.current,    "slugRu": slugRu.current,    publishedAt,    heroImage  }
+export type HomeSelectedWorkQueryResult = Array<{
+  _id: string;
+  title: LocalizedText | null;
+  client: LocalizedText | null;
+  summary: LocalizedText | null;
+  slugEn: string | null;
+  slugRu: string | null;
+  publishedAt: string | null;
+  heroImage: MediaAsset | null;
+}> | null;
+// Variable: homeUseCasesQuery
+// Query: *[_type == "homePage"][0].useCases[]{    _key,    heading,    description,    service->{      _id,      "slugEn": slugEn.current,      "slugRu": slugRu.current    }  }
+export type HomeUseCasesQueryResult = Array<{
+  _key: string;
+  heading: LocalizedText | null;
+  description: LocalizedText | null;
+  service: {
+    _id: string;
+    slugEn: string | null;
+    slugRu: string | null;
+  } | null;
+}> | null;
 // Variable: serviceBySlugQuery
 // Query: *[_type == "service" && (    ($locale == "en" && slugEn.current == $slug) ||    ($locale == "ru" && slugRu.current == $slug)  )][0]
 export type ServiceBySlugQueryResult = {
@@ -1261,12 +1308,13 @@ export type ServiceBySlugQueryResult = {
   seo?: SeoMetadata;
 } | null;
 // Variable: allServicesQuery
-// Query: *[_type == "service"] | order(order asc) {    _id,    "slugEn": slugEn.current,    "slugRu": slugRu.current,    title,    order  }
+// Query: *[_type == "service"] | order(order asc) {    _id,    "slugEn": slugEn.current,    "slugRu": slugRu.current,    title,    tagline,    order  }
 export type AllServicesQueryResult = Array<{
   _id: string;
   slugEn: string | null;
   slugRu: string | null;
   title: LocalizedText | null;
+  tagline: LocalizedText | null;
   order: number | null;
 }>;
 // Variable: caseStudyBySlugQuery
@@ -1393,6 +1441,18 @@ export type CaseStudyBySlugQueryResult = {
   finalCta?: CtaBlock;
   seo?: SeoMetadata;
 } | null;
+// Variable: workIndexQuery
+// Query: *[_type == "caseStudy" && defined(slugEn.current) && defined(slugRu.current)]    | order(publishedAt desc) {    _id,    title,    client,    summary,    "slugEn": slugEn.current,    "slugRu": slugRu.current,    publishedAt,    heroImage  }
+export type WorkIndexQueryResult = Array<{
+  _id: string;
+  title: LocalizedText | null;
+  client: LocalizedText | null;
+  summary: LocalizedText | null;
+  slugEn: string | null;
+  slugRu: string | null;
+  publishedAt: string | null;
+  heroImage: MediaAsset | null;
+}>;
 // Variable: allCaseStudySlugsQuery
 // Query: *[_type == "caseStudy" && defined(slugEn.current) && defined(slugRu.current)] {    "slugEn": slugEn.current,    "slugRu": slugRu.current  }
 export type AllCaseStudySlugsQueryResult = Array<{
@@ -1936,14 +1996,17 @@ declare module "@sanity/client" {
   interface SanityQueries {
     '*[_type == "globalSettings"][0]': GlobalSettingsQueryResult;
     '*[_type == "homePage"][0]': HomePageQueryResult;
-    '*[_type == "aboutPage"][0]': AboutPageQueryResult;
+    '\n  *[_type == "aboutPage"][0]{\n    ...,\n    founder->{\n      _id,\n      name,\n      role,\n      bio,\n      photo\n    }\n  }\n': AboutPageQueryResult;
     '*[_type == "contactPage"][0]': ContactPageQueryResult;
     '*[_type == "workIndexPage"][0]': WorkIndexPageQueryResult;
     '*[_type == "blogIndexPage"][0]': BlogIndexPageQueryResult;
     '*[_type == "thankYouPage"][0]': ThankYouPageQueryResult;
+    '\n  *[_type == "homePage"][0].selectedWork[]->{\n    _id,\n    title,\n    client,\n    summary,\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current,\n    publishedAt,\n    heroImage\n  }\n': HomeSelectedWorkQueryResult;
+    '\n  *[_type == "homePage"][0].useCases[]{\n    _key,\n    heading,\n    description,\n    service->{\n      _id,\n      "slugEn": slugEn.current,\n      "slugRu": slugRu.current\n    }\n  }\n': HomeUseCasesQueryResult;
     '\n  *[_type == "service" && (\n    ($locale == "en" && slugEn.current == $slug) ||\n    ($locale == "ru" && slugRu.current == $slug)\n  )][0]\n': ServiceBySlugQueryResult;
-    '\n  *[_type == "service"] | order(order asc) {\n    _id,\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current,\n    title,\n    order\n  }\n': AllServicesQueryResult;
+    '\n  *[_type == "service"] | order(order asc) {\n    _id,\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current,\n    title,\n    tagline,\n    order\n  }\n': AllServicesQueryResult;
     '\n  *[_type == "caseStudy" && (\n    ($locale == "en" && slugEn.current == $slug) ||\n    ($locale == "ru" && slugRu.current == $slug)\n  )][0]\n': CaseStudyBySlugQueryResult;
+    '\n  *[_type == "caseStudy" && defined(slugEn.current) && defined(slugRu.current)]\n    | order(publishedAt desc) {\n    _id,\n    title,\n    client,\n    summary,\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current,\n    publishedAt,\n    heroImage\n  }\n': WorkIndexQueryResult;
     '\n  *[_type == "caseStudy" && defined(slugEn.current) && defined(slugRu.current)] {\n    "slugEn": slugEn.current,\n    "slugRu": slugRu.current\n  }\n': AllCaseStudySlugsQueryResult;
     '\n  *[_type == "caseStudy"] | order(publishedAt desc) [0...$limit]\n': LatestCaseStudiesQueryResult;
     '\n  *[_type == "blogPost" && (\n    ($locale == "en" && slugEn.current == $slug) ||\n    ($locale == "ru" && slugRu.current == $slug)\n  )][0]\n': BlogPostBySlugQueryResult;

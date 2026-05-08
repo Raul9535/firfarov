@@ -3,7 +3,7 @@ const en = {
     about: "About",
     services: "Services",
     work: "Work",
-    blog: "Blog",
+    insights: "Insights",
     contact: "Contact",
   },
   footer: {
